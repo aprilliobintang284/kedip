@@ -6,17 +6,25 @@
              TextOptions.TextFormattingMode="Display" RenderOptions.ClearTypeHint="Enabled"
              RenderTransformOrigin="0.5,0">
     <UserControl.RenderTransform>
-        <ScaleTransform x:Name="Zoom" />
+        <TransformGroup>
+            <ScaleTransform x:Name="Zoom" />
+            <TranslateTransform x:Name="Nudge" />
+        </TransformGroup>
     </UserControl.RenderTransform>
     <Grid x:Name="Layout" HorizontalAlignment="Left" VerticalAlignment="Center">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Grid x:Name="Badge" VerticalAlignment="Center">
+        <Grid x:Name="Badge" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+                <ScaleTransform x:Name="BadgePop" />
+            </Grid.RenderTransform>
             <Ellipse x:Name="BadgeBack" />
             <TextBlock x:Name="GlyphText" FontFamily="{StaticResource IconFont}"
                        HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Image x:Name="BadgeImage" Visibility="Collapsed" Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
         </Grid>
         <StackPanel x:Name="TextStack" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
             <TextBlock x:Name="TitleText" FontFamily="{StaticResource UiFont}" FontSize="13" FontWeight="SemiBold"

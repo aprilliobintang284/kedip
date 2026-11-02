@@ -41,6 +41,16 @@ public sealed class AppSettings
     /// <summary>When LRCLIB has nothing, also search a second lyrics source.</summary>
     public bool LyricsExtraSources { get; set; } = true;
 
+    // Notifications mirrored from Windows
+    public bool NotificationsEnabled { get; set; } = true;
+    public bool NotificationShowContent { get; set; } = true;
+
+    /// <summary>App user model ids whose notifications are not shown.</summary>
+    public List<string> NotificationMutedApps { get; set; } = [];
+
+    /// <summary>App user model ids that have sent a notification (for the settings list).</summary>
+    public List<string> NotificationSeenApps { get; set; } = [];
+
     // Prayer times (defaults: Kab. Kendal, Jawa Tengah)
     public bool PrayerEnabled { get; set; } = true;
     public string PrayerCity { get; set; } = "Kab. Kendal";

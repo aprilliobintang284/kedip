@@ -2,6 +2,7 @@ using System.Windows;
 using Kedip.Core;
 using Kedip.Mascot;
 using Kedip.Media;
+using Kedip.Notifications;
 using Kedip.Power;
 using Kedip.Prayer;
 using Kedip.Productivity;
@@ -64,6 +65,7 @@ public partial class App : Application
             Pomodoro = new PomodoroService(settings, peeks),
             Water = new WaterService(settings, peeks),
             Shelf = new ShelfService(),
+            Notifications = new NotificationService(settings, peeks),
         };
         _services.StartAll();
 

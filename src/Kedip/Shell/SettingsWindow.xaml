@@ -52,6 +52,7 @@
                 <RadioButton x:Name="NavAppearance" Style="{StaticResource SNavItem}" Tag="&#xE771;" Content="Tampilan" />
                 <RadioButton x:Name="NavMascot" Style="{StaticResource SNavItem}" Tag="&#xE890;" Content="Maskot" />
                 <RadioButton x:Name="NavMusic" Style="{StaticResource SNavItem}" Tag="&#xE8D6;" Content="Musik" />
+                <RadioButton x:Name="NavNotifications" Style="{StaticResource SNavItem}" Tag="&#xEA8F;" Content="Notifikasi" />
                 <RadioButton x:Name="NavPrayer" Style="{StaticResource SNavItem}" Tag="&#xE708;" Content="Sholat" />
                 <RadioButton x:Name="NavWater" Style="{StaticResource SNavItem}" Tag="&#xEB42;" Content="Minum" />
                 <RadioButton x:Name="NavTimer" Style="{StaticResource SNavItem}" Tag="&#xE916;" Content="Timer" />
@@ -175,6 +176,32 @@
                             <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="LyricsExtraSwitch" Content="Cari di sumber lain"
                                       Tag="Kalau LRCLIB belum punya liriknya, Kedip mencari di NetEase Music" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Notifikasi -->
+                <StackPanel x:Name="PageNotifications" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Notifikasi" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" TextWrapping="Wrap"
+                               Text="Pesan dari WhatsApp, Discord, dan app lain muncul sebentar di notch." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <CheckBox x:Name="NotificationsSwitch" Content="Tampilkan notifikasi di notch"
+                                      Tag="Dibaca dari notifikasi Windows di PC ini, tidak dikirim ke mana pun" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="NotificationContentSwitch" Content="Tampilkan isi pesan"
+                                      Tag="Matikan kalau kamu cuma mau tahu ada pesan masuk, tanpa isinya" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Aplikasi" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <StackPanel x:Name="NotificationAppsPanel" />
+                            <TextBlock x:Name="NotificationAppsEmpty" Margin="12" Style="{StaticResource SHint}" TextWrapping="Wrap"
+                                       Text="Belum ada app yang mengirim notifikasi. App akan muncul di sini begitu ada notifikasi masuk." />
                         </StackPanel>
                     </Border>
                 </StackPanel>

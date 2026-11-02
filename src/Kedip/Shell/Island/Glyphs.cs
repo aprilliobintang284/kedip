@@ -13,6 +13,7 @@ internal static class Glyphs
     public static readonly string Drop = Of(0xEB42);
     public static readonly string Battery = Of(0xE850);
     public static readonly string Download = Of(0xE896);
+    public static readonly string Message = Of(0xE8BD);
 
     private static string Of(int codePoint) => char.ConvertFromUtf32(codePoint);
 }

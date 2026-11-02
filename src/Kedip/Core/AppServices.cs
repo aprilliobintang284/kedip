@@ -1,5 +1,6 @@
 using Kedip.Mascot;
 using Kedip.Media;
+using Kedip.Notifications;
 using Kedip.Power;
 using Kedip.Prayer;
 using Kedip.Productivity;
@@ -27,9 +28,10 @@ public sealed class AppServices : IDisposable
     public required PomodoroService Pomodoro { get; init; }
     public required WaterService Water { get; init; }
     public required ShelfService Shelf { get; init; }
+    public required NotificationService Notifications { get; init; }
 
     private IEnumerable<IAppService> All =>
-        [Foreground, Mascot, Media, Lyrics, Prayer, Power, Pomodoro, Water, Shelf];
+        [Foreground, Mascot, Media, Lyrics, Prayer, Power, Pomodoro, Water, Shelf, Notifications];
 
     /// <summary>Starts every service; one failing service is logged and does not stop the others.</summary>
     public void StartAll()

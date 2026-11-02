@@ -56,6 +56,7 @@ public partial class SettingsWindow : Window
         SetUpAppearance();
         SetUpMascot();
         SetUpMusic();
+        SetUpNotifications();
         SetUpPrayer();
         SetUpWater();
         SetUpTimer();
@@ -80,6 +81,7 @@ public partial class SettingsWindow : Window
             (NavAppearance, PageAppearance),
             (NavMascot, PageMascot),
             (NavMusic, PageMusic),
+            (NavNotifications, PageNotifications),
             (NavPrayer, PagePrayer),
             (NavWater, PageWater),
             (NavTimer, PageTimer),
@@ -188,6 +190,51 @@ public partial class SettingsWindow : Window
         BindSwitch(LyricsSwitch, s => s.LyricsEnabled, (s, v) => s.LyricsEnabled = v);
         BindSwitch(LyricsInNotchSwitch, s => s.LyricsInNotch, (s, v) => s.LyricsInNotch = v);
         BindSwitch(LyricsExtraSwitch, s => s.LyricsExtraSources, (s, v) => s.LyricsExtraSources = v);
+    }
+
+    private void SetUpNotifications()
+    {
+        BindSwitch(NotificationsSwitch, s => s.NotificationsEnabled, (s, v) => s.NotificationsEnabled = v);
+        BindSwitch(NotificationContentSwitch, s => s.NotificationShowContent, (s, v) => s.NotificationShowContent = v);
+        BuildNotificationApps();
+        _services.Notifications.AppsChanged += OnNotificationAppsChanged;
+    }
+
+    private void OnNotificationAppsChanged(object? sender, EventArgs e) => BuildNotificationApps();
+
+    private void BuildNotificationApps()
+    {
+        NotificationAppsPanel.Children.Clear();
+        var apps = _services.Notifications.GetKnownApps();
+        NotificationAppsEmpty.Visibility = apps.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var muted = Store.Current.NotificationMutedApps;
+        foreach (var app in apps)
+        {
+            if (NotificationAppsPanel.Children.Count > 0)
+            {
+                NotificationAppsPanel.Children.Add(new Border { Style = (Style)FindResource("SDivider") });
+            }
+
+            var row = new CheckBox
+            {
+                Content = app.Name,
+                IsChecked = !muted.Contains(app.AppId, StringComparer.OrdinalIgnoreCase),
+            };
+            string id = app.AppId;
+            row.Click += (_, _) =>
+            {
+                bool on = row.IsChecked == true;
+                Apply(s =>
+                {
+                    s.NotificationMutedApps.RemoveAll(m => string.Equals(m, id, StringComparison.OrdinalIgnoreCase));
+                    if (!on)
+                    {
+                        s.NotificationMutedApps.Add(id);
+                    }
+                });
+            };
+            NotificationAppsPanel.Children.Add(row);
+        }
     }
 
     private void SetUpPrayer()
@@ -387,6 +434,8 @@ public partial class SettingsWindow : Window
         LyricsSwitch.IsEnabled = s.MusicEnabled;
         LyricsInNotchSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
         LyricsExtraSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
+        NotificationContentSwitch.IsEnabled = s.NotificationsEnabled;
+        NotificationAppsPanel.IsEnabled = s.NotificationsEnabled;
 
         bool custom = FindCity(s.PrayerCity) < 0;
         PrayerLocation.IsEnabled = s.PrayerEnabled;
@@ -645,6 +694,7 @@ public partial class SettingsWindow : Window
     {
         FlushSize();
         Store.Changed -= OnSettingsChanged;
+        _services.Notifications.AppsChanged -= OnNotificationAppsChanged;
         StopScrollAnimation();
     }
 }
