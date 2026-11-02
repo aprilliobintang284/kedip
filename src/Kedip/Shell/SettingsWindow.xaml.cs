@@ -447,6 +447,12 @@ public partial class SettingsWindow : Window
         LyricsExtraSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
         NotificationContentSwitch.IsEnabled = s.NotificationsEnabled;
         TuckMusicSegments.IsEnabled = s.Tuck != TuckMode.Off;
+        TuckMusicRow.IsEnabled = s.Tuck != TuckMode.Off;
+        // With "Lirik tetap tampil" on, songs with lyrics keep their lyric line, so this choice only covers the rest.
+        TuckMusicRow.Header = s.TuckKeepsLyrics ? "Saat ada lagu tanpa lirik" : "Saat ada lagu";
+        TuckMusicRow.Description = s.TuckKeepsLyrics
+            ? "Khusus lagu yang liriknya belum tersedia. Lagu yang ada liriknya tetap menampilkan lirik (sakelar \"Lirik tetap tampil\" di bawah)."
+            : "Berlaku untuk semua lagu yang diputar. Gelombang bergoyang mengikuti beat.";
         TuckClickSwitch.IsEnabled = s.Tuck != TuckMode.Off;
         TuckLyricsSwitch.IsEnabled = s.Tuck != TuckMode.Off;
         NotificationAppsPanel.IsEnabled = s.NotificationsEnabled;
