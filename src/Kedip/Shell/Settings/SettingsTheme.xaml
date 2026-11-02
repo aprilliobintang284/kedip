@@ -163,14 +163,27 @@
                                 <ColumnDefinition />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel x:Name="TextPart" Margin="0,0,16,0" VerticalAlignment="Center">
                                 <TextBlock Style="{StaticResource SLabel}" Text="{TemplateBinding Header}" />
                                 <TextBlock x:Name="Desc" Style="{StaticResource SHint}" Text="{TemplateBinding Description}" />
                             </StackPanel>
-                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center" />
+                            <ContentPresenter x:Name="Presenter" Grid.Column="1" VerticalAlignment="Center" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Stacked" Value="True">
+                            <Setter TargetName="TextPart" Property="Margin" Value="0" />
+                            <Setter TargetName="TextPart" Property="Grid.ColumnSpan" Value="2" />
+                            <Setter TargetName="Presenter" Property="Grid.Row" Value="1" />
+                            <Setter TargetName="Presenter" Property="Grid.Column" Value="0" />
+                            <Setter TargetName="Presenter" Property="Grid.ColumnSpan" Value="2" />
+                            <Setter TargetName="Presenter" Property="HorizontalAlignment" Value="Left" />
+                            <Setter TargetName="Presenter" Property="Margin" Value="0,10,0,2" />
+                        </Trigger>
                         <Trigger Property="Description" Value="{x:Null}">
                             <Setter TargetName="Desc" Property="Visibility" Value="Collapsed" />
                         </Trigger>

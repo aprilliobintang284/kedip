@@ -12,6 +12,16 @@ public sealed class SettingRow : ContentControl
     public static readonly DependencyProperty DescriptionProperty = DependencyProperty.Register(
         nameof(Description), typeof(string), typeof(SettingRow), new PropertyMetadata(null));
 
+    /// <summary>Put the content under the text instead of beside it (for wide controls such as 4-way pickers).</summary>
+    public static readonly DependencyProperty StackedProperty = DependencyProperty.Register(
+        nameof(Stacked), typeof(bool), typeof(SettingRow), new PropertyMetadata(false));
+
+    public bool Stacked
+    {
+        get => (bool)GetValue(StackedProperty);
+        set => SetValue(StackedProperty, value);
+    }
+
     public string Header
     {
         get => (string)GetValue(HeaderProperty);

@@ -106,12 +106,12 @@
                                 <s:SegmentedControl x:Name="PositionSegments" Segments="Kiri|Tengah|Kanan" />
                             </s:SettingRow>
                             <Border Style="{StaticResource SDivider}" />
-                            <s:SettingRow Header="Mengecil otomatis"
+                            <s:SettingRow Header="Mengecil otomatis" Stacked="True"
                                           Description="Jadi garis tipis saat jendela menempel di atas, biar tab browser bisa dipakai. Arahkan kursor ke garisnya untuk memunculkan lagi.">
                                 <s:SegmentedControl x:Name="TuckSegments" Segments="Mati|Browser|Semua" />
                             </s:SettingRow>
                             <Border Style="{StaticResource SDivider}" />
-                            <s:SettingRow Header="Saat ada lagu"
+                            <s:SettingRow Header="Saat ada lagu" Stacked="True"
                                           Description="Tampilan notch yang mengecil selama lagu diputar. Gelombang bergoyang mengikuti beat.">
                                 <s:SegmentedControl x:Name="TuckMusicSegments" Segments="Garis|Gelombang|Mini|Keduanya" />
                             </s:SettingRow>
