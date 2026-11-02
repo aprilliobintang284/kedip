@@ -3,7 +3,8 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:local="clr-namespace:Kedip.DockBar"
                   Title="Semua app">
-    <Border Background="#66101012" Padding="16,14,16,12">
+    <Border Background="{StaticResource PanelSurface}" BorderBrush="{StaticResource DockEdge}" BorderThickness="1" CornerRadius="20"
+            Padding="16,14,16,12">
         <StackPanel Width="584">
             <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Height="40" Tag="Cari app…" />
             <TextBlock x:Name="SectionTitle" Text="Semua app" Margin="4,14,0,6" FontSize="13" FontWeight="SemiBold" Opacity="0.85" />

@@ -3,7 +3,7 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:local="clr-namespace:Kedip.DockBar"
                   Title="Kontrol cepat">
-    <Border Background="{StaticResource PanelSurface}">
+    <Border Background="{StaticResource PanelSurface}" BorderBrush="{StaticResource DockEdge}" BorderThickness="1" CornerRadius="20">
         <Grid Width="372" ClipToBounds="True">
             <!-- Main page: tiles (split ones open a page with their chevron), sliders, battery footer. -->
             <StackPanel x:Name="MainPage">
@@ -49,7 +49,8 @@
                     </Grid>
                 </StackPanel>
 
-                <Border Margin="0,14,0,0" Padding="12,6" Background="#0AFFFFFF" BorderBrush="{StaticResource DockLine}" BorderThickness="0,1,0,0">
+                <Border Margin="0,14,0,0" Padding="12,6" Background="#0AFFFFFF" BorderBrush="{StaticResource DockLine}" BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,19,19">
                     <Grid>
                         <Button x:Name="BatteryButton" Style="{StaticResource PanelLink}" HorizontalAlignment="Left" ToolTip="Pengaturan baterai">
                             <StackPanel Orientation="Horizontal">
@@ -78,7 +79,7 @@
                     <ToggleButton x:Name="DetailSwitch" Style="{StaticResource PanelSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
                 <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="8,4" Background="#0AFFFFFF" BorderBrush="{StaticResource DockLine}"
-                        BorderThickness="0,1,0,0">
+                        BorderThickness="0,1,0,0" CornerRadius="0,0,19,19">
                     <Button x:Name="DetailMore" Style="{StaticResource PanelLink}" />
                 </Border>
                 <StackPanel>

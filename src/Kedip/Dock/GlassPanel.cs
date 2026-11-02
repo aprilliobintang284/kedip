@@ -13,6 +13,9 @@ namespace Kedip.DockBar;
 /// </summary>
 public class GlassPanel : Window
 {
+    /// <summary>Corner radius of every flyout (DIP); the root border of each panel uses the same value.</summary>
+    public const double Radius = 20;
+
     private static readonly IEasingFunction Rise = Frozen(new CubicEase { EasingMode = EasingMode.EaseOut });
     private bool _closing;
     private long _shownAt;
@@ -35,7 +38,11 @@ public class GlassPanel : Window
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Kedip;component/Dock/DockTheme.xaml", UriKind.Relative) });
         DockAccent.Apply(Resources);
 
-        SourceInitialized += (_, _) => Glass.Apply(new WindowInteropHelper(this).Handle, noActivate: false);
+        SourceInitialized += (_, _) =>
+        {
+            Glass.Apply(new WindowInteropHelper(this).Handle, noActivate: false);
+            ApplyShape();
+        };
         Deactivated += (_, _) =>
         {
             // Windows sometimes bounces the activation back to the previous app right after the panel opens;
@@ -47,6 +54,7 @@ public class GlassPanel : Window
         };
         SizeChanged += (_, e) =>
         {
+            ApplyShape();
             // Pages of different heights: grow upwards, keeping the bottom edge above the dock.
             if (e.HeightChanged && !double.IsNaN(_bottom) && !_closing)
             {
@@ -64,6 +72,19 @@ public class GlassPanel : Window
     }
 
     public bool IsClosing => _closing;
+
+    private void ApplyShape()
+    {
+        IntPtr hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero || ActualWidth <= 0)
+        {
+            return;
+        }
+
+        var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+        var size = new Rect(0, 0, ActualWidth * toDevice.M11, ActualHeight * toDevice.M22);
+        Glass.Shape(hwnd, [size], Radius * toDevice.M22);
+    }
 
     /// <summary>
     /// Shows the panel with its bottom at <paramref name="bottom"/> (DIP): its left edge, right edge or centre at
@@ -93,9 +114,12 @@ public class GlassPanel : Window
             content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160)));
         }
 
-        var rise = new DoubleAnimation(top + 14, top, animate ? TimeSpan.FromMilliseconds(220) : TimeSpan.Zero) { EasingFunction = Rise };
-        rise.Completed += (_, _) => _bottom = bottom;
-        BeginAnimation(TopProperty, rise);
+        // Anchored from now on: content that arrives late (brightness, lists) makes the panel grow upwards.
+        _bottom = bottom;
+        BeginAnimation(TopProperty, new DoubleAnimation(top + 14, top, animate ? TimeSpan.FromMilliseconds(220) : TimeSpan.Zero)
+        {
+            EasingFunction = Rise,
+        });
     }
 
     public void CloseSmooth()

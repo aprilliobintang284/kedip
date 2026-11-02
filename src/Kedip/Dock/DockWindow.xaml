@@ -15,34 +15,39 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <!-- Black smoked glass over the blurred backdrop, with a hairline sheen along the top edge. -->
-    <Border x:Name="Root" Background="{StaticResource DockSurface}">
-        <Grid>
-            <Border BorderBrush="{StaticResource DockSheen}" BorderThickness="0,1,0,0" CornerRadius="8,8,0,0" IsHitTestVisible="False" />
-            <StackPanel Orientation="Horizontal" Height="62" Margin="8,0">
-                <Button x:Name="StartButton" AutomationProperties.Name="Start" Style="{StaticResource DockButton}" ToolTip="Start (klik kanan: menu cepat)">
-                    <Grid Width="16" Height="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-                        <Border Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
-                        <Border Grid.Column="1" Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
-                        <Border Grid.Row="1" Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
-                        <Border Grid.Row="1" Grid.Column="1" Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
-                    </Grid>
-                </Button>
+    <!-- Three glass islands (like the notch): a Start bubble, a capsule of app tiles, and a capsule for status and clock.
+         The gaps between them are cut out of the window (see ApplyShape). -->
+    <StackPanel x:Name="Islands" Orientation="Horizontal">
+        <Border x:Name="StartIsland" Style="{StaticResource DockSegment}" Width="60">
+            <Button x:Name="StartButton" AutomationProperties.Name="Start" Style="{StaticResource DockCircleButton}"
+                    ToolTip="Start (klik kanan: menu cepat)">
+                <Grid Width="18" Height="18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Border Margin="1" CornerRadius="3" Background="{DynamicResource DockAccentBrush}" />
+                    <Border Grid.Column="1" Margin="1" CornerRadius="3" Background="{DynamicResource DockAccentBrush}" />
+                    <Border Grid.Row="1" Margin="1" CornerRadius="3" Background="{DynamicResource DockAccentBrush}" />
+                    <Border Grid.Row="1" Grid.Column="1" Margin="1" CornerRadius="3" Background="{DynamicResource DockAccentBrush}" />
+                </Grid>
+            </Button>
+        </Border>
 
-                <Rectangle x:Name="StartDivider" Style="{StaticResource DockDivider}" />
+        <Border x:Name="AppsIsland" Style="{StaticResource DockSegment}" Margin="8,0,0,0" Padding="9,0">
+            <StackPanel Orientation="Horizontal">
                 <StackPanel x:Name="PinnedPanel" Orientation="Horizontal" />
                 <Rectangle x:Name="RunningDivider" Style="{StaticResource DockDivider}" />
                 <StackPanel x:Name="RunningPanel" Orientation="Horizontal" />
-                <Rectangle Style="{StaticResource DockDivider}" />
+            </StackPanel>
+        </Border>
 
+        <Border x:Name="StatusIsland" Style="{StaticResource DockSegment}" Margin="8,0,0,0" Padding="10,0">
+            <StackPanel Orientation="Horizontal">
                 <Button x:Name="TrayButton" AutomationProperties.Name="Ikon tersembunyi" Style="{StaticResource DockButton}" MinWidth="30"
                         Padding="4,0" ToolTip="Tampilkan ikon tersembunyi">
                     <TextBlock x:Name="TrayGlyph" Style="{StaticResource DockGlyph}" FontSize="12" />
@@ -93,9 +98,9 @@
                 </Button>
 
                 <Button x:Name="DesktopButton" AutomationProperties.Name="Desktop" Style="{StaticResource DockButton}" MinWidth="36" ToolTip="Tampilkan desktop">
-                    <Border Width="16" Height="12" BorderBrush="White" BorderThickness="1.5" CornerRadius="2.5" Opacity="0.85" />
+                    <Border Width="16" Height="12" BorderBrush="White" BorderThickness="1.5" CornerRadius="3" Opacity="0.85" />
                 </Button>
             </StackPanel>
-        </Grid>
-    </Border>
+        </Border>
+    </StackPanel>
 </Window>

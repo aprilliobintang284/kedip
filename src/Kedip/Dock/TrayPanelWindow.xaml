@@ -3,7 +3,7 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:local="clr-namespace:Kedip.DockBar"
                   Title="Ikon tersembunyi">
-    <Border Background="{StaticResource PanelSurface}">
+    <Border Background="{StaticResource PanelSurface}" BorderBrush="{StaticResource DockEdge}" BorderThickness="1" CornerRadius="20">
         <StackPanel Margin="8">
             <WrapPanel x:Name="Icons" MaxWidth="220" HorizontalAlignment="Left" />
             <TextBlock x:Name="EmptyText" Text="Belum ada ikon tray" Margin="10,8" FontSize="12.5"

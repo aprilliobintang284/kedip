@@ -14,6 +14,25 @@
             <GradientStop Offset="0.5" Color="#38FFFFFF" />
             <GradientStop Offset="1" Color="#00FFFFFF" />
         </LinearGradientBrush>
+        <!-- Glass edge: brighter along the top, fading down. -->
+        <LinearGradientBrush x:Key="DockEdge" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#40FFFFFF" />
+            <GradientStop Offset="0.45" Color="#14FFFFFF" />
+            <GradientStop Offset="1" Color="#1CFFFFFF" />
+        </LinearGradientBrush>
+        <!-- App tiles: one glass tile per logo so the row looks even. -->
+        <LinearGradientBrush x:Key="AppTileFill" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#2EFFFFFF" />
+            <GradientStop Offset="1" Color="#0FFFFFFF" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AppTileActiveFill" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#4AFFFFFF" />
+            <GradientStop Offset="1" Color="#1FFFFFFF" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AppTileEdge" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#4DFFFFFF" />
+            <GradientStop Offset="1" Color="#0AFFFFFF" />
+        </LinearGradientBrush>
         <SolidColorBrush x:Key="DockHover" Color="#1AFFFFFF" />
         <SolidColorBrush x:Key="DockPress" Color="#0FFFFFFF" />
         <SolidColorBrush x:Key="DockLine" Color="#1CFFFFFF" />
@@ -23,6 +42,64 @@
         <SolidColorBrush x:Key="DockAccentBrush" Color="#FF4CC2FF" />
         <SolidColorBrush x:Key="DockAccentHoverBrush" Color="#E64CC2FF" />
         <SolidColorBrush x:Key="DockOnAccentBrush" Color="#E6000000" />
+
+        <!-- An island of the dock (Start bubble, app capsule, status capsule): a fully rounded glass capsule. -->
+        <Style x:Key="DockSegment" TargetType="Border">
+            <Setter Property="Height" Value="60" />
+            <Setter Property="CornerRadius" Value="30" />
+            <Setter Property="Background" Value="{StaticResource DockSurface}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DockEdge}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <!-- Round button filling the Start bubble. -->
+        <Style x:Key="DockCircleButton" TargetType="Button">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Ellipse x:Name="Plate" Fill="Transparent" />
+                            <ContentPresenter x:Name="Body" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                <ContentPresenter.RenderTransform>
+                                    <ScaleTransform />
+                                </ContentPresenter.RenderTransform>
+                            </ContentPresenter>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Plate" Property="Fill" Value="{StaticResource DockHover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Plate" Property="Fill" Value="{StaticResource DockPress}" />
+                                <Setter TargetName="Body" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.9" ScaleY="0.9" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Button without chrome (app tiles draw their own). -->
+        <Style x:Key="DockPlainButton" TargetType="Button">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <ContentPresenter />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- One cell of the status group (network / volume / battery): hit area for its own tooltip. -->
         <Style x:Key="StatusCell" TargetType="Border">
@@ -44,7 +121,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid Background="Transparent">
-                            <Border x:Name="Plate" CornerRadius="11" Background="Transparent" Margin="0,3" />
+                            <Border x:Name="Plate" CornerRadius="17" Background="Transparent" Margin="0,3" />
                             <ContentPresenter x:Name="Body" Margin="{TemplateBinding Padding}" HorizontalAlignment="Center"
                                               VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                                 <ContentPresenter.RenderTransform>
@@ -98,8 +175,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource DockMenuEdge}" BorderThickness="1" CornerRadius="10"
-                                Padding="5" MinWidth="190" Margin="0,0,0,6">
+                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource DockMenuEdge}" BorderThickness="1" CornerRadius="16"
+                                Padding="6" MinWidth="190" Margin="0,0,0,6">
                             <ItemsPresenter />
                         </Border>
                     </ControlTemplate>
@@ -113,7 +190,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="Row" CornerRadius="6" Padding="10,7" Background="Transparent">
+                        <Border x:Name="Row" CornerRadius="10" Padding="10,7" Background="Transparent">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="24" />
@@ -150,7 +227,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
-                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource DockMenuEdge}" BorderThickness="1" CornerRadius="7" Padding="9,5"
+                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource DockMenuEdge}" BorderThickness="1" CornerRadius="11" Padding="10,5"
                                 Margin="0,0,0,8">
                             <ContentPresenter TextBlock.FontSize="12" TextBlock.FontFamily="{StaticResource UiFont}" />
                         </Border>
@@ -196,7 +273,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="6" Background="Transparent">
+                    <Border x:Name="Plate" CornerRadius="17" Background="Transparent">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -313,7 +390,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="7" Background="Transparent" Padding="10,8">
+                    <Border x:Name="Plate" CornerRadius="12" Background="Transparent" Padding="10,8">
                         <ContentPresenter HorizontalAlignment="Stretch" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -338,7 +415,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="6" Background="Transparent" Padding="10,8">
+                    <Border x:Name="Plate" CornerRadius="12" Background="Transparent" Padding="10,8">
                         <ContentPresenter HorizontalAlignment="Left" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -364,7 +441,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="6" Background="{DynamicResource DockAccentBrush}" Padding="14,6">
+                    <Border x:Name="Plate" CornerRadius="15" Background="{DynamicResource DockAccentBrush}" Padding="16,6">
                         <ContentPresenter HorizontalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -387,7 +464,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="6" Background="#1CFFFFFF" BorderBrush="#12FFFFFF" BorderThickness="1" Padding="14,5">
+                    <Border x:Name="Plate" CornerRadius="15" Background="#1CFFFFFF" BorderBrush="#12FFFFFF" BorderThickness="1" Padding="16,5">
                         <ContentPresenter HorizontalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -412,7 +489,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
                     <StackPanel Orientation="Horizontal" Background="Transparent">
-                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="4" BorderThickness="1" BorderBrush="#B3FFFFFF"
+                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="5" BorderThickness="1" BorderBrush="#B3FFFFFF"
                                 Background="Transparent">
                             <TextBlock x:Name="Tick" FontFamily="{StaticResource IconFont}" FontSize="11" Text="&#xE73E;"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource DockOnAccentBrush}"
@@ -442,7 +519,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="PasswordBox">
-                    <Border x:Name="Box" CornerRadius="6" Background="#14FFFFFF" BorderBrush="#26FFFFFF" BorderThickness="1,1,1,2" Padding="10,0">
+                    <Border x:Name="Box" CornerRadius="16" Background="#14FFFFFF" BorderBrush="#26FFFFFF" BorderThickness="1" Padding="12,0">
                         <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -463,7 +540,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="7" Background="Transparent" Margin="1">
+                    <Border x:Name="Plate" CornerRadius="13" Background="Transparent" Margin="1">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -488,7 +565,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="Box" CornerRadius="8" Background="#14FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1,1,1,2" Padding="12,0">
+                    <Border x:Name="Box" CornerRadius="20" Background="#14FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1" Padding="14,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -523,7 +600,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="12" Background="Transparent" Margin="2">
+                    <Border x:Name="Plate" CornerRadius="18" Background="Transparent" Margin="2">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>

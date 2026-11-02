@@ -135,7 +135,7 @@ public partial class ControlPanelWindow : GlassPanel
         var plate = new Border
         {
             Height = 50,
-            CornerRadius = new CornerRadius(7),
+            CornerRadius = new CornerRadius(14),
             BorderThickness = new Thickness(1),
         };
         var grid = new Grid();
@@ -143,7 +143,7 @@ public partial class ControlPanelWindow : GlassPanel
         {
             Style = (Style)FindResource("TilePart"),
             Content = new TextBlock { Text = Glyph(glyph), FontFamily = (FontFamily)FindResource("IconFont"), FontSize = 16 },
-            Tag = more is null ? new CornerRadius(6) : new CornerRadius(6, 0, 0, 6),
+            Tag = more is null ? new CornerRadius(13) : new CornerRadius(13, 0, 0, 13),
             ToolTip = title,
         };
         AutomationProperties.SetName(main, title);
@@ -163,7 +163,7 @@ public partial class ControlPanelWindow : GlassPanel
             {
                 Style = (Style)FindResource("TilePart"),
                 Content = new TextBlock { Text = Glyph(0xE76C), FontFamily = (FontFamily)FindResource("IconFont"), FontSize = 11 },
-                Tag = new CornerRadius(0, 6, 6, 0),
+                Tag = new CornerRadius(0, 13, 13, 0),
                 ToolTip = $"Pengaturan {title} lainnya",
             };
             AutomationProperties.SetName(moreButton, title + " lainnya");
@@ -427,7 +427,7 @@ public partial class ControlPanelWindow : GlassPanel
         }
 
         box.Children.Add(expanded);
-        return new Border { CornerRadius = new CornerRadius(7), Child = box, ClipToBounds = true, Margin = new Thickness(0, 1, 0, 1) };
+        return new Border { CornerRadius = new CornerRadius(12), Child = box, ClipToBounds = true, Margin = new Thickness(0, 1, 0, 1) };
     }
 
     private TextBlock IconText(int glyph, double size = 16) => new()

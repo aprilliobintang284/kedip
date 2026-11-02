@@ -65,6 +65,7 @@ public partial class DockWindow : Window
         SizeChanged += (_, e) =>
         {
             Place(animate: false);
+            ScheduleShape();
             if (e.HeightChanged && _services.Settings.Current.DockReplaceTaskbar)
             {
                 // The reserved strip follows the dock's real height (unknown until the first layout).
@@ -73,6 +74,10 @@ public partial class DockWindow : Window
         };
         MouseEnter += (_, _) => Evaluate();
         Closed += OnClosed;
+        foreach (var island in new[] { StartIsland, AppsIsland, StatusIsland })
+        {
+            island.SizeChanged += (_, _) => ScheduleShape();
+        }
 
         StartButton.Click += (_, _) => TogglePanel(() => new AppsPanelWindow(_services), HorizontalAlignment.Left);
         StartButton.ContextMenu = QuickMenu.Start(this, () => _menuOpen = true, () =>
@@ -127,6 +132,48 @@ public partial class DockWindow : Window
         HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
         _appBar = new AppBar(_hwnd);
         _taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
+    }
+
+    // ---- Shape ---------------------------------------------------------------------------------------------------
+
+    private bool _shapePending;
+
+    /// <summary>Re-cuts the window to the islands once the layout has settled (apps come and go, widths change).</summary>
+    private void ScheduleShape()
+    {
+        if (_shapePending)
+        {
+            return;
+        }
+
+        _shapePending = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Render, () =>
+        {
+            _shapePending = false;
+            ApplyShape();
+        });
+    }
+
+    /// <summary>Only the islands are window (blur, clicks); the gaps between them show and reach the desktop.</summary>
+    private void ApplyShape()
+    {
+        if (_hwnd == IntPtr.Zero || ActualWidth <= 0)
+        {
+            return;
+        }
+
+        var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+        var rects = new List<Rect>();
+        foreach (var island in new FrameworkElement[] { StartIsland, AppsIsland, StatusIsland })
+        {
+            if (island.IsVisible && island.ActualWidth > 0)
+            {
+                var bounds = island.TransformToAncestor(this).TransformBounds(new Rect(island.RenderSize));
+                rects.Add(Rect.Transform(bounds, toDevice));
+            }
+        }
+
+        Glass.Shape(_hwnd, rects, StartIsland.ActualHeight / 2 * toDevice.M22);
     }
 
     // ---- "Gantikan taskbar" --------------------------------------------------------------------------------------
@@ -410,34 +457,46 @@ public partial class DockWindow : Window
         RunningDivider.Visibility = RunningPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// <summary>
+    /// An app on its own glass tile (all tiles the same size, so the row stays even whatever the logo); a dot below for
+    /// running apps, wide for the one in front. The tile pops up a little under the cursor.
+    /// </summary>
     private Button CreateTile(DockApp app)
     {
-        UIElement face;
+        UIElement logo;
         if (app.Icon is { } icon)
         {
-            var image = new Image { Width = 34, Height = 34, Source = icon, Stretch = Stretch.Uniform };
+            var image = new Image { Width = 28, Height = 28, Source = icon, Stretch = Stretch.Uniform };
             RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
-            face = image;
+            logo = image;
         }
         else
         {
-            face = new Border
+            logo = new TextBlock
             {
-                Width = 34,
-                Height = 34,
-                CornerRadius = new CornerRadius(9),
-                Background = (Brush)FindResource("SurfaceBrush"),
-                Child = new TextBlock
-                {
-                    Text = app.Name.Length > 0 ? app.Name[..1].ToUpperInvariant() : "?",
-                    FontSize = 16,
-                    FontWeight = FontWeights.SemiBold,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                },
+                Text = app.Name.Length > 0 ? app.Name[..1].ToUpperInvariant() : "?",
+                FontSize = 18,
+                FontWeight = FontWeights.SemiBold,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
             };
         }
 
+        var pop = new ScaleTransform();
+        var face = new Border
+        {
+            Width = 44,
+            Height = 44,
+            CornerRadius = new CornerRadius(14),
+            BorderThickness = new Thickness(1),
+            Background = (Brush)FindResource(app.IsActive ? "AppTileActiveFill" : "AppTileFill"),
+            BorderBrush = (Brush)FindResource("AppTileEdge"),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 4, 0, 0),
+            RenderTransformOrigin = new Point(0.5, 1),
+            RenderTransform = pop,
+            Child = logo,
+        };
         var dot = new Border
         {
             Height = 3.5,
@@ -446,24 +505,26 @@ public partial class DockWindow : Window
             Background = app.IsActive ? Brushes.White : DimDot,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 0, 2),
+            Margin = new Thickness(0, 0, 0, 2.5),
             Visibility = app.IsRunning ? Visibility.Visible : Visibility.Hidden,
         };
-        var body = new Grid { Width = 40, Height = 50 };
-        ((FrameworkElement)face).VerticalAlignment = VerticalAlignment.Center;
-        ((FrameworkElement)face).Margin = new Thickness(0, 0, 0, 3);
+        var body = new Grid { Width = 48, Height = 58 };
         body.Children.Add(face);
         body.Children.Add(dot);
 
-        var tile = new Button
-        {
-            Style = (Style)FindResource("DockButton"),
-            Content = body,
-            Padding = new Thickness(2, 0, 2, 0),
-            MinWidth = 0,
-            ToolTip = app.Name,
-        };
+        var tile = new Button { Style = (Style)FindResource("DockPlainButton"), Content = body, ToolTip = app.Name };
         AutomationProperties.SetName(tile, app.Name + (app.IsRunning ? $" ({app.Windows.Count})" : ""));
+        void Scale(double to)
+        {
+            var duration = Animations ? TimeSpan.FromMilliseconds(140) : TimeSpan.Zero;
+            pop.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(to, duration) { EasingFunction = SlideEase });
+            pop.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(to, duration) { EasingFunction = SlideEase });
+        }
+
+        tile.MouseEnter += (_, _) => Scale(1.1);
+        tile.MouseLeave += (_, _) => Scale(1);
+        tile.PreviewMouseLeftButtonDown += (_, _) => Scale(0.94);
+        tile.PreviewMouseLeftButtonUp += (_, _) => Scale(tile.IsMouseOver ? 1.1 : 1);
         tile.Click += (_, _) =>
         {
             DockApps.Click(app);
