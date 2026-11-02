@@ -76,6 +76,9 @@ public partial class App : Application
 
         StartupRegistration.Sync(settings.Current.StartWithWindows);
         settings.Changed += (_, _) => StartupRegistration.Sync(settings.Current.StartWithWindows);
+
+        // Start-up allocates a lot that is never needed again.
+        MemoryTrimmer.Request(TimeSpan.FromSeconds(20));
     }
 
     private void OpenSettings()
@@ -97,7 +100,12 @@ public partial class App : Application
         }
 
         _settingsWindow = new SettingsWindow(_services);
-        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Closed += (_, _) =>
+        {
+            _settingsWindow = null;
+            // The settings window is by far the heaviest thing Kedip shows; hand its memory back once it is gone.
+            MemoryTrimmer.Request(TimeSpan.FromSeconds(2));
+        };
         _settingsWindow.Show();
         _settingsWindow.Activate();
     }

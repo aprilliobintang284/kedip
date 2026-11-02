@@ -35,4 +35,9 @@
     <Resource Include="Assets\kedip.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 0-9: higher compacts more eagerly to keep the heap small (cheap for an app this size). -->
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="7" />
+  </ItemGroup>
+
 </Project>

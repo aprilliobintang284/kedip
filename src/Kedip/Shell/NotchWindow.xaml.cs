@@ -268,6 +268,8 @@ public partial class NotchWindow : Window
         }
 
         _isExpanded = false;
+        // Panels, album art and tooltips allocated while open are garbage now; return it once things are quiet.
+        MemoryTrimmer.Request(TimeSpan.FromSeconds(20));
         if (!ContinuePeeks())
         {
             Refresh();
