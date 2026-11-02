@@ -107,6 +107,10 @@ public sealed class MediaService : IAppService
     private Session? _pendingSession;
     private bool _committingPending;
 
+    // YouTube's hover previews overwrite the page's media metadata and leave it there while the real video keeps
+    // playing (same timeline). Such a title is remembered here and ignored until playback really moves on.
+    private string? _rejectedKey;
+
     /// <summary>Current track, or null when nothing is playing/paused.</summary>
     public MediaInfo? Current { get; private set; }
 
@@ -593,6 +597,12 @@ public sealed class MediaService : IAppService
         bool trackChanged = false;
         bool playbackChanged = false;
 
+        if (s.HasMedia && _rejectedKey is not null && MediaKey(s) == _rejectedKey)
+        {
+            // Still the preview's metadata over the same playback: keep showing the real track.
+            s.HasMedia = false;
+        }
+
         if (s.HasMedia && ShouldSettle(s))
         {
             // Possibly a hover preview: keep showing the current track (and its timeline) until the new one settles.
@@ -646,6 +656,14 @@ public sealed class MediaService : IAppService
             {
                 _lastRawTimeline = raw;
                 var duration = s.End > s.Start ? s.End - s.Start : TimeSpan.Zero;
+                if (_rejectedKey is not null
+                    && ((duration - _duration).Duration() >= TimeSpan.FromSeconds(1) || s.Position - s.Start < TimeSpan.FromSeconds(5)))
+                {
+                    // Playback really moved on (a new length, or back at the start): read the metadata afresh.
+                    _rejectedKey = null;
+                    MarkDirty(Dirty.Media);
+                }
+
                 if ((duration - _duration).Duration() >= TimeSpan.FromSeconds(1))
                 {
                     trackChanged = true;
@@ -794,6 +812,13 @@ public sealed class MediaService : IAppService
             return;
         }
 
+        if (LooksLikeOverwrite(held))
+        {
+            _rejectedKey = MediaKey(held);
+            Log.Info("Ignored a media title change without a new track (browser hover preview)");
+            return;
+        }
+
         _committingPending = true;
         try
         {
@@ -813,6 +838,29 @@ public sealed class MediaService : IAppService
     {
         _settleTimer?.Stop();
         _pending = null;
+        _rejectedKey = null;
+    }
+
+    private static string MediaKey(Snapshot s) => s.Title + "\n" + s.Artist;
+
+    /// <summary>
+    /// A new title while the same playback simply carries on (well past the start, same length) is not a new track:
+    /// it is a page (YouTube's hover preview) overwriting the metadata.
+    /// </summary>
+    private bool LooksLikeOverwrite(Snapshot held)
+    {
+        if (_duration <= TimeSpan.Zero || ExtrapolatedPosition(DateTimeOffset.UtcNow) < TimeSpan.FromSeconds(8))
+        {
+            return false;
+        }
+
+        if (!held.HasTimeline)
+        {
+            return true;
+        }
+
+        var heldDuration = held.End > held.Start ? held.End - held.Start : TimeSpan.Zero;
+        return (heldDuration - _duration).Duration() < TimeSpan.FromSeconds(2) && held.Position - held.Start > TimeSpan.FromSeconds(8);
     }
 
     private static void CopyTimeline(Snapshot from, Snapshot to)
