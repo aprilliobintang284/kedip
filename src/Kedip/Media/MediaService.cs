@@ -57,6 +57,11 @@ public sealed class MediaService : IAppService
     private static readonly TimeSpan EmptyMetadataGrace = TimeSpan.FromMilliseconds(1500);
     private static readonly TimeSpan DriftThreshold = TimeSpan.FromMilliseconds(250);
 
+    // Browsers report hover previews (YouTube thumbnails that start playing under the cursor) as the current media.
+    // A different title while a browser is already playing is held back until it stays put this long.
+    private static readonly TimeSpan BrowserSettleDelay = TimeSpan.FromMilliseconds(2500);
+    private static readonly string[] BrowserNames = ["Chrome", "Edge", "Firefox", "Opera", "Brave"];
+
     private Dispatcher? _dispatcher;
     private SessionManager? _manager;
     private Session? _session;
@@ -96,6 +101,11 @@ public sealed class MediaService : IAppService
     private string _thumbnailHash = "";
     private string _trackKey = "";
     private int _thumbnailRequest;
+
+    private DispatcherTimer? _settleTimer;
+    private Snapshot? _pending;
+    private Session? _pendingSession;
+    private bool _committingPending;
 
     /// <summary>Current track, or null when nothing is playing/paused.</summary>
     public MediaInfo? Current { get; private set; }
@@ -244,6 +254,7 @@ public sealed class MediaService : IAppService
 
         _disposed = true;
         _emptyGraceTimer?.Stop();
+        CancelSettle();
         UnsubscribeSession();
         if (_manager is { } manager)
         {
@@ -372,6 +383,7 @@ public sealed class MediaService : IAppService
                         _lastRawTimeline = null;
                         _emptyGraceExpired = false;
                         _emptyGraceTimer?.Stop();
+                        CancelSettle();
                         what |= Dirty.AllProperties;
                     }
                 }
@@ -581,6 +593,24 @@ public sealed class MediaService : IAppService
         bool trackChanged = false;
         bool playbackChanged = false;
 
+        if (s.HasMedia && ShouldSettle(s))
+        {
+            // Possibly a hover preview: keep showing the current track (and its timeline) until the new one settles.
+            HoldForSettle(s);
+            s.HasMedia = false;
+            s.HasTimeline = false;
+        }
+        else if (s.HasMedia)
+        {
+            CancelSettle();
+        }
+        else if (s.HasTimeline && _pending is { } held)
+        {
+            // Timeline updates that arrive while a new title is settling belong to that title.
+            CopyTimeline(s, held);
+            s.HasTimeline = false;
+        }
+
         if (!string.Equals(sourceApp, _sourceAppId, StringComparison.Ordinal))
         {
             _sourceAppId = sourceApp;
@@ -708,8 +738,95 @@ public sealed class MediaService : IAppService
         }
     }
 
+    private bool ShouldSettle(Snapshot s) =>
+        !_committingPending
+        && _hasMetadata
+        && _status == Status.Playing
+        && (s.Title.Length > 0 || s.Artist.Length > 0)
+        && (s.Title != _title || s.Artist != _artist)
+        && Array.IndexOf(BrowserNames, MediaAppNames.Get(s.SourceApp)) >= 0;
+
+    private void HoldForSettle(Snapshot s)
+    {
+        bool sameAsHeld = _pending is { } held && held.Title == s.Title && held.Artist == s.Artist;
+        var next = new Snapshot
+        {
+            SourceApp = s.SourceApp,
+            HasMedia = true,
+            Title = s.Title,
+            Artist = s.Artist,
+            Album = s.Album,
+            Thumbnail = s.Thumbnail,
+        };
+        if (s.HasTimeline)
+        {
+            CopyTimeline(s, next);
+        }
+        else if (sameAsHeld && _pending!.HasTimeline)
+        {
+            CopyTimeline(_pending, next);
+        }
+
+        _pending = next;
+        _pendingSession = _session;
+        if (sameAsHeld)
+        {
+            return;
+        }
+
+        if (_settleTimer is null)
+        {
+            _settleTimer = new DispatcherTimer(DispatcherPriority.Normal) { Interval = BrowserSettleDelay };
+            _settleTimer.Tick += OnSettleTick;
+        }
+
+        _settleTimer.Stop();
+        _settleTimer.Start();
+    }
+
+    private void OnSettleTick(object? sender, EventArgs e)
+    {
+        _settleTimer?.Stop();
+        var held = _pending;
+        _pending = null;
+        if (held is null || _disposed || !ReferenceEquals(_pendingSession, _session))
+        {
+            return;
+        }
+
+        _committingPending = true;
+        try
+        {
+            Apply(held);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Applying settled media failed", ex);
+        }
+        finally
+        {
+            _committingPending = false;
+        }
+    }
+
+    private void CancelSettle()
+    {
+        _settleTimer?.Stop();
+        _pending = null;
+    }
+
+    private static void CopyTimeline(Snapshot from, Snapshot to)
+    {
+        to.HasTimeline = true;
+        to.Start = from.Start;
+        to.End = from.End;
+        to.Position = from.Position;
+        to.LastUpdated = from.LastUpdated;
+    }
+
     private void ApplyNoSession()
     {
+        CancelSettle();
         _sourceAppId = "";
         _hasMetadata = false;
         _status = Status.Closed;

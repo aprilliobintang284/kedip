@@ -25,9 +25,11 @@
         <TextBlock x:Name="VersionText" Margin="0,2,0,0" HorizontalAlignment="Center"
                    Foreground="{StaticResource STextSecondaryBrush}" Typography.NumeralAlignment="Tabular" />
         <TextBlock Margin="0,16,0,0" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" LineHeight="20">
-            <Run Text="Notch ringan buatan sendiri." /><LineBreak /><Run Foreground="{StaticResource STextSecondaryBrush}"
-                                                                         Text="Terinspirasi Nusa &amp; Intip." />
+            <Run Text="Dibuat oleh Aprillio." /><LineBreak /><Run Foreground="{StaticResource STextSecondaryBrush}"
+                Text="Notch ringan dengan maskot mata, musik &amp; lirik, waktu sholat, dan pengingat, tepat di atas layarmu." />
         </TextBlock>
+        <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{StaticResource STextTertiaryBrush}"
+                   Text="© 2026 Aprillio" />
 
         <Border Margin="0,24,0,24" Style="{StaticResource SCard}">
             <Grid Margin="12,10">

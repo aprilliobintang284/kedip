@@ -18,6 +18,11 @@ namespace Kedip.Shell;
 public partial class NotchWindow : Window
 {
     private static readonly TimeSpan HoverDelay = TimeSpan.FromMilliseconds(150);
+
+    // Tucked: a thin line over a maximized browser so its tabs stay usable. Touching it reveals the notch at once;
+    // it opens only after a slightly longer hover, so sweeping across the tab strip doesn't pop it open.
+    private static readonly TimeSpan TuckedHoverDelay = TimeSpan.FromMilliseconds(400);
+    private const double TuckHeight = 4;
     private static readonly TimeSpan LeaveDelay = TimeSpan.FromMilliseconds(400);
     private static readonly TimeSpan DefaultPeekDuration = TimeSpan.FromSeconds(3);
 
@@ -40,6 +45,7 @@ public partial class NotchWindow : Window
     private IslandTab _lastTab;
     private bool _isExpanded;
     private bool _isHidden;
+    private bool _isTucked;
     private bool _hoverPending;
     private bool _suppressHover;
     private bool _dragInside;
@@ -133,12 +139,13 @@ public partial class NotchWindow : Window
         var settings = _services.Settings.Current;
         var (baseWidth, baseHeight) = settings.GetNotchSize();
         Surface.Anchor = settings.Position;
-        Surface.EarRadius = NotchShape.EarRadiusFor(baseHeight);
         _collapsed.Eyes.Animate = settings.Animations;
 
         var mode = _isExpanded ? IslandMode.Expanded : _currentPeek is not null ? IslandMode.Peek : IslandMode.Collapsed;
         var previousMode = _mode;
         _mode = mode;
+        _isTucked = mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted();
+        Surface.EarRadius = _isTucked ? 2 : NotchShape.EarRadiusFor(baseHeight);
 
         var content = CollapsedContent.From(_services);
         Size target;
@@ -154,7 +161,7 @@ public partial class NotchWindow : Window
                 break;
             default:
                 double width = _collapsed.Apply(content, baseWidth, baseHeight, animate && previousMode == IslandMode.Collapsed);
-                target = new Size(width, baseHeight);
+                target = _isTucked ? new Size(Math.Max(56, Math.Round(baseWidth * 0.42)), TuckHeight) : new Size(width, baseHeight);
                 calm = previousMode == IslandMode.Collapsed && content.Centre == CentreContent.Lyric &&
                        _lastContent?.Centre == CentreContent.Lyric && _lastContent?.HasWings == content.HasWings;
                 break;
@@ -167,7 +174,7 @@ public partial class NotchWindow : Window
             target = new Size(target.Width + 8, target.Height + 2);
         }
 
-        bool collapsedVisible = mode == IslandMode.Collapsed;
+        bool collapsedVisible = mode == IslandMode.Collapsed && !_isTucked;
         Motion.FadeTo(_collapsed, collapsedVisible, animate, collapsedVisible ? TimeSpan.FromMilliseconds(180) : TimeSpan.FromMilliseconds(90),
             collapsedVisible && previousMode != IslandMode.Collapsed ? TimeSpan.FromMilliseconds(90) : null);
         if (mode != IslandMode.Peek)
@@ -191,7 +198,7 @@ public partial class NotchWindow : Window
 
     private void UpdateClockAndEyes(CollapsedContent content)
     {
-        bool collapsed = !_isHidden && _mode == IslandMode.Collapsed;
+        bool collapsed = !_isHidden && !_isTucked && _mode == IslandMode.Collapsed;
         bool clockNeeded = !_isHidden && ((collapsed && content.Centre == CentreContent.Clock) || _mode == IslandMode.Expanded);
         _clock.SetRunning(clockNeeded);
         if (clockNeeded)
@@ -436,6 +443,7 @@ public partial class NotchWindow : Window
             return;
         }
 
+        _hoverTimer.Interval = _isTucked ? TuckedHoverDelay : HoverDelay;
         _hoverPending = true;
         _hoverTimer.Stop();
         _hoverTimer.Start();
@@ -635,6 +643,21 @@ public partial class NotchWindow : Window
     {
         NotchPlacement.ReassertTopmost(_hwnd);
         UpdateHidden();
+        if (!_isHidden && _isTucked != (_mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted()))
+        {
+            Refresh();
+        }
+    }
+
+    private bool IsTuckWanted()
+    {
+        var foreground = _services.Foreground;
+        return _services.Settings.Current.Tuck switch
+        {
+            TuckMode.Browser => foreground.IsBrowserForeground && foreground.IsTopEdgeForeground,
+            TuckMode.AnyWindow => foreground.IsTopEdgeForeground,
+            _ => false,
+        };
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>

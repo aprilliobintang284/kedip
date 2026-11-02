@@ -197,7 +197,7 @@ public sealed class LyricsService : IAppService
         CancelLookup();
         var cts = new CancellationTokenSource();
         _lookupCts = cts;
-        var request = new LyricsRequest(info.Artist, info.Title, info.Album, info.Duration, info.SourceAppId);
+        var request = new LyricsRequest(info.Artist, info.Title, info.Album, info.Duration, info.SourceAppId, _settings.Current.LyricsExtraSources);
         string cacheDir;
         try
         {

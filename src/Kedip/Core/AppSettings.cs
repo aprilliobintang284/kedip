@@ -6,6 +6,9 @@ public enum NotchPosition { Left, Center, Right }
 
 public enum IdleStyle { Eyes, Clock }
 
+/// <summary>When the notch tucks itself into a thin line so the window under it (e.g. browser tabs) can be used.</summary>
+public enum TuckMode { Off, Browser, AnyWindow }
+
 /// <summary>User settings, persisted as JSON. Sizes are in DIPs.</summary>
 public sealed class AppSettings
 {
@@ -16,6 +19,9 @@ public sealed class AppSettings
     public NotchPosition Position { get; set; } = NotchPosition.Center;
     public bool Animations { get; set; } = true;
     public bool HideInFullscreen { get; set; } = true;
+
+    /// <summary>Tuck into a thin line over a maximized browser (or any window) whose top sits under the notch.</summary>
+    public TuckMode Tuck { get; set; } = TuckMode.Browser;
     // Off by default so development builds never register themselves; enabled when installed.
     public bool StartWithWindows { get; set; }
 
@@ -31,6 +37,9 @@ public sealed class AppSettings
     public bool MusicEnabled { get; set; } = true;
     public bool LyricsEnabled { get; set; } = true;
     public bool LyricsInNotch { get; set; } = true;
+
+    /// <summary>When LRCLIB has nothing, also search a second lyrics source.</summary>
+    public bool LyricsExtraSources { get; set; } = true;
 
     // Prayer times (defaults: Kab. Kendal, Jawa Tengah)
     public bool PrayerEnabled { get; set; } = true;

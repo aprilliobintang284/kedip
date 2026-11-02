@@ -10,7 +10,7 @@ using Kedip.Core;
 namespace Kedip.Media;
 
 /// <summary>What the media session says about the track whose lyrics we want.</summary>
-internal sealed record LyricsRequest(string Artist, string Title, string Album, TimeSpan Duration, string SourceAppId);
+internal sealed record LyricsRequest(string Artist, string Title, string Album, TimeSpan Duration, string SourceAppId, bool UseFallback = true);
 
 /// <summary>Outcome of a lookup. <see cref="Synced"/> is raw LRC text.</summary>
 internal sealed record LyricsResult(string? Synced, string? Plain, bool Instrumental, bool FromCache);
@@ -21,6 +21,10 @@ internal sealed class LyricsCacheEntry
     public string? Plain { get; set; }
     public bool NotFound { get; set; }
     public bool Instrumental { get; set; }
+
+    /// <summary>The fallback source (NetEase) was also asked.</summary>
+    public bool TriedFallback { get; set; }
+
     public DateTimeOffset FetchedAt { get; set; }
 }
 
@@ -64,12 +68,25 @@ internal static class LrclibClient
     {
         string cacheFile = Path.Combine(cacheDir, CacheKey(request) + ".json");
         var cached = await ReadCacheAsync(cacheFile, ct).ConfigureAwait(false);
-        if (cached is not null && !ShouldRetry(cached))
+        if (cached is not null && !ShouldRetry(cached) && !(request.UseFallback && cached.Synced is null && !cached.Instrumental && !cached.TriedFallback))
         {
             return new LyricsResult(cached.Synced, cached.Plain, cached.Instrumental, FromCache: true);
         }
 
         var fetched = await FetchAsync(request, ct).ConfigureAwait(false);
+        bool triedFallback = false;
+        if (request.UseFallback && fetched is not { Instrumental: true } && fetched?.Synced is null)
+        {
+            // LRCLIB has no synced lyrics (or is down): ask the second source.
+            triedFallback = true;
+            string? alt = await NeteaseLyrics.FindSyncedAsync(request, ct).ConfigureAwait(false);
+            if (alt is not null)
+            {
+                Log.Info("Lyrics found via fallback source");
+                fetched = new LyricsResult(alt, fetched?.Plain, false, FromCache: false);
+            }
+        }
+
         if (fetched is null)
         {
             return cached is null ? null : new LyricsResult(cached.Synced, cached.Plain, cached.Instrumental, FromCache: true);
@@ -81,6 +98,7 @@ internal static class LrclibClient
             Plain = fetched.Plain,
             Instrumental = fetched.Instrumental,
             NotFound = fetched.Synced is null && fetched.Plain is null && !fetched.Instrumental,
+            TriedFallback = triedFallback,
             FetchedAt = DateTimeOffset.UtcNow,
         };
         await WriteCacheAsync(cacheFile, entry, ct).ConfigureAwait(false);

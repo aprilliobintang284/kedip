@@ -138,6 +138,23 @@ public partial class SettingsWindow : Window
             Apply(s => s.Position = position);
         };
 
+        _loaders.Add(s => TuckSegments.SelectedIndex = s.Tuck switch
+        {
+            TuckMode.Off => 0,
+            TuckMode.AnyWindow => 2,
+            _ => 1,
+        });
+        TuckSegments.SelectionChanged += (_, _) =>
+        {
+            var tuck = TuckSegments.SelectedIndex switch
+            {
+                0 => TuckMode.Off,
+                2 => TuckMode.AnyWindow,
+                _ => TuckMode.Browser,
+            };
+            Apply(s => s.Tuck = tuck);
+        };
+
         BindSwitch(AnimationsSwitch, s => s.Animations, (s, v) => s.Animations = v);
         BindSwitch(FullscreenSwitch, s => s.HideInFullscreen, (s, v) => s.HideInFullscreen = v);
     }
@@ -170,6 +187,7 @@ public partial class SettingsWindow : Window
         BindSwitch(MusicSwitch, s => s.MusicEnabled, (s, v) => s.MusicEnabled = v);
         BindSwitch(LyricsSwitch, s => s.LyricsEnabled, (s, v) => s.LyricsEnabled = v);
         BindSwitch(LyricsInNotchSwitch, s => s.LyricsInNotch, (s, v) => s.LyricsInNotch = v);
+        BindSwitch(LyricsExtraSwitch, s => s.LyricsExtraSources, (s, v) => s.LyricsExtraSources = v);
     }
 
     private void SetUpPrayer()
@@ -368,6 +386,7 @@ public partial class SettingsWindow : Window
 
         LyricsSwitch.IsEnabled = s.MusicEnabled;
         LyricsInNotchSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
+        LyricsExtraSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
 
         bool custom = FindCity(s.PrayerCity) < 0;
         PrayerLocation.IsEnabled = s.PrayerEnabled;

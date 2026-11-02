@@ -105,6 +105,11 @@
                                 <s:SegmentedControl x:Name="PositionSegments" Segments="Kiri|Tengah|Kanan" />
                             </s:SettingRow>
                             <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Mengecil otomatis"
+                                          Description="Jadi garis tipis saat jendela menempel di atas, biar tab browser bisa dipakai. Arahkan kursor ke garisnya untuk memunculkan lagi.">
+                                <s:SegmentedControl x:Name="TuckSegments" Segments="Mati|Browser|Semua" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="AnimationsSwitch" Content="Animasi"
                                       Tag="Gerak halus saat notch membuka dan menutup" />
                             <Border Style="{StaticResource SDivider}" />
@@ -167,6 +172,9 @@
                             <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="LyricsInNotchSwitch" Content="Lirik di notch"
                                       Tag="Baris lirik ikut berjalan walau notch sedang tertutup" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="LyricsExtraSwitch" Content="Cari di sumber lain"
+                                      Tag="Kalau LRCLIB belum punya liriknya, Kedip mencari di NetEase Music" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -346,7 +354,9 @@
                                     <TextBlock x:Name="AboutVersionText" Margin="8,0,0,1" VerticalAlignment="Bottom"
                                                Foreground="{StaticResource STextSecondaryBrush}" Typography.NumeralAlignment="Tabular" />
                                 </StackPanel>
-                                <TextBlock Style="{StaticResource SHint}" Text="Notch ringan buatan sendiri. Terinspirasi Nusa &amp; Intip." />
+                                <TextBlock Style="{StaticResource SHint}" Text="Dibuat oleh Aprillio · © 2026" />
+                                <TextBlock Style="{StaticResource SHint}" TextWrapping="Wrap"
+                                           Text="Notch ringan dengan maskot mata, musik &amp; lirik, waktu sholat, dan pengingat." />
                             </StackPanel>
                         </Grid>
                     </Border>
