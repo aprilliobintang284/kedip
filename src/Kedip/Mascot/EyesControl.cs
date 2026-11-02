@@ -21,6 +21,16 @@ public sealed class EyesControl : FrameworkElement
         nameof(LookY), typeof(double), typeof(EyesControl),
         new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    /// <summary>When false, state changes snap instead of animating (blinks still happen, instantly).</summary>
+    public static readonly DependencyProperty AnimateProperty = DependencyProperty.Register(
+        nameof(Animate), typeof(bool), typeof(EyesControl), new FrameworkPropertyMetadata(true));
+
+    public bool Animate
+    {
+        get => (bool)GetValue(AnimateProperty);
+        set => SetValue(AnimateProperty, value);
+    }
+
     public MascotMood Mood
     {
         get => (MascotMood)GetValue(MoodProperty);

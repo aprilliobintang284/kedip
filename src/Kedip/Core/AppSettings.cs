@@ -16,7 +16,8 @@ public sealed class AppSettings
     public NotchPosition Position { get; set; } = NotchPosition.Center;
     public bool Animations { get; set; } = true;
     public bool HideInFullscreen { get; set; } = true;
-    public bool StartWithWindows { get; set; } = true;
+    // Off by default so development builds never register themselves; enabled when installed.
+    public bool StartWithWindows { get; set; }
 
     // Mascot
     public IdleStyle IdleStyle { get; set; } = IdleStyle.Eyes;
