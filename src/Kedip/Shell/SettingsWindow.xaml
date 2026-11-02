@@ -160,13 +160,33 @@
                     <TextBlock Style="{StaticResource SSectionTitle}" Text="Widget" />
                     <Border Style="{StaticResource SCard}">
                         <StackPanel>
-                            <CheckBox x:Name="DockTimerSwitch" Content="Timer" Tag="Klik untuk mulai atau jeda timer fokus" />
-                            <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="DockWeatherSwitch" Content="Cuaca"
                                       Tag="Suhu di kotamu (dari pengaturan Sholat), lewat Open-Meteo" />
                             <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="DockNetSwitch" Content="Kecepatan internet" Tag="Unduh dan unggah saat ini" />
                         </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="App" />
+                    <Border Style="{StaticResource SCard}">
+                        <Grid Margin="12,10" MinHeight="32">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource SLabel}" Text="Samakan dengan taskbar Windows" />
+                                <TextBlock x:Name="DockPinsHint" Style="{StaticResource SHint}" TextWrapping="Wrap"
+                                           Text="Ganti app di dock dengan yang disematkan di taskbar Windows, urutannya sama." />
+                            </StackPanel>
+                            <Button Grid.Column="1" Click="OnCopyWindowsPins" AutomationProperties.Name="Salin pin taskbar">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource SIconFont}" FontSize="14"
+                                               Text="&#xE718;" />
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Salin pin" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                     </Border>
 
                     <TextBlock Margin="4,12,0,0" Style="{StaticResource SHint}" TextWrapping="Wrap"
@@ -268,8 +288,13 @@
                     <TextBlock Style="{StaticResource SPageSubtitle}" Text="Jadwal sholat harian dengan parameter Kemenag RI." />
 
                     <Border Style="{StaticResource SCard}">
-                        <CheckBox x:Name="PrayerSwitch" Content="Tampilkan waktu sholat"
-                                  Tag="Jadwal hari ini dan hitung mundur ke waktu berikutnya" />
+                        <StackPanel>
+                            <CheckBox x:Name="PrayerSwitch" Content="Tampilkan waktu sholat"
+                                      Tag="Jadwal hari ini dan hitung mundur ke waktu berikutnya" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="WeatherSwitch" Content="Tampilkan cuaca"
+                                      Tag="Tab cuaca di notch dan suhu di samping jam, untuk lokasi di bawah (lewat Open-Meteo)" />
+                        </StackPanel>
                     </Border>
 
                     <TextBlock Style="{StaticResource SSectionTitle}" Text="Lokasi" />

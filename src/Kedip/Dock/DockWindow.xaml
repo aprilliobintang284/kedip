@@ -15,80 +15,87 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <!-- A faint tint on top of the system acrylic keeps icons readable on bright wallpapers. -->
-    <Border x:Name="Root" Background="#66101012" Padding="8,0">
-        <StackPanel Orientation="Horizontal" Height="62">
-            <Button x:Name="StartButton" AutomationProperties.Name="Start" Style="{StaticResource DockButton}" ToolTip="Start (klik kanan: menu cepat)">
-                <Grid Width="16" Height="16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition />
-                    </Grid.RowDefinitions>
-                    <Border Margin="1" CornerRadius="2" Background="White" />
-                    <Border Grid.Column="1" Margin="1" CornerRadius="2" Background="White" />
-                    <Border Grid.Row="1" Margin="1" CornerRadius="2" Background="White" />
-                    <Border Grid.Row="1" Grid.Column="1" Margin="1" CornerRadius="2" Background="White" />
-                </Grid>
-            </Button>
+    <!-- Black smoked glass over the blurred backdrop, with a hairline sheen along the top edge. -->
+    <Border x:Name="Root" Background="{StaticResource DockSurface}">
+        <Grid>
+            <Border BorderBrush="{StaticResource DockSheen}" BorderThickness="0,1,0,0" CornerRadius="8,8,0,0" IsHitTestVisible="False" />
+            <StackPanel Orientation="Horizontal" Height="62" Margin="8,0">
+                <Button x:Name="StartButton" AutomationProperties.Name="Start" Style="{StaticResource DockButton}" ToolTip="Start (klik kanan: menu cepat)">
+                    <Grid Width="16" Height="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <Border Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
+                        <Border Grid.Column="1" Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
+                        <Border Grid.Row="1" Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
+                        <Border Grid.Row="1" Grid.Column="1" Margin="1" CornerRadius="2" Background="{DynamicResource DockAccentBrush}" />
+                    </Grid>
+                </Button>
 
-            <Button x:Name="TimerButton" AutomationProperties.Name="Timer" Style="{StaticResource DockButton}" Padding="10,0" ToolTip="Klik: mulai / jeda timer fokus">
-                <StackPanel>
-                    <TextBlock x:Name="TimerText" Text="--:--" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"
-                               Typography.NumeralAlignment="Tabular" />
-                    <TextBlock x:Name="TimerCaption" Text="timer" Style="{StaticResource DockCaption}" />
+                <Rectangle x:Name="StartDivider" Style="{StaticResource DockDivider}" />
+                <StackPanel x:Name="PinnedPanel" Orientation="Horizontal" />
+                <Rectangle x:Name="RunningDivider" Style="{StaticResource DockDivider}" />
+                <StackPanel x:Name="RunningPanel" Orientation="Horizontal" />
+                <Rectangle Style="{StaticResource DockDivider}" />
+
+                <Button x:Name="TrayButton" AutomationProperties.Name="Ikon tersembunyi" Style="{StaticResource DockButton}" MinWidth="30"
+                        Padding="4,0" ToolTip="Tampilkan ikon tersembunyi">
+                    <TextBlock x:Name="TrayGlyph" Style="{StaticResource DockGlyph}" FontSize="12" />
+                </Button>
+
+                <!-- Network, volume and battery share one hover plate (like the Windows tray); scroll to change the volume. -->
+                <Button x:Name="StatusButton" AutomationProperties.Name="Status" Style="{StaticResource DockButton}" Padding="7,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="NetworkCell" Style="{StaticResource StatusCell}">
+                            <TextBlock x:Name="NetworkGlyph" Style="{StaticResource DockGlyph}" />
+                        </Border>
+                        <Border x:Name="VolumeCell" Style="{StaticResource StatusCell}">
+                            <TextBlock x:Name="VolumeGlyph" Style="{StaticResource DockGlyph}" />
+                        </Border>
+                        <Border x:Name="BatteryCell" Style="{StaticResource StatusCell}" Padding="4,0,2,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="BatteryGlyph" Style="{StaticResource DockGlyph}" FontSize="17" />
+                                <TextBlock x:Name="BatteryPercent" Margin="5,0,0,0" FontSize="12.5" VerticalAlignment="Center"
+                                           Typography.NumeralAlignment="Tabular" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Button>
+
+                <StackPanel x:Name="NetSpeedPanel" VerticalAlignment="Center" Margin="8,0,6,0">
+                    <TextBlock x:Name="DownText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular" />
+                    <TextBlock x:Name="UpText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
                 </StackPanel>
-            </Button>
 
-            <Rectangle x:Name="StartDivider" Style="{StaticResource DockDivider}" />
-            <StackPanel x:Name="PinnedPanel" Orientation="Horizontal" />
-            <Rectangle x:Name="RunningDivider" Style="{StaticResource DockDivider}" />
-            <StackPanel x:Name="RunningPanel" Orientation="Horizontal" />
-            <Rectangle Style="{StaticResource DockDivider}" />
-
-            <Button x:Name="TaskbarButton" AutomationProperties.Name="Taskbar" Style="{StaticResource DockButton}" MinWidth="30"
-                    Visibility="Collapsed">
-                <TextBlock x:Name="TaskbarGlyph" Style="{StaticResource DockGlyph}" FontSize="12" Text="&#xE70E;" />
-            </Button>
-            <Button x:Name="NetworkButton" AutomationProperties.Name="Wi-Fi" Style="{StaticResource DockButton}" MinWidth="36">
-                <TextBlock x:Name="NetworkGlyph" Style="{StaticResource DockGlyph}" />
-            </Button>
-            <Button x:Name="VolumeButton" AutomationProperties.Name="Volume" Style="{StaticResource DockButton}" MinWidth="36">
-                <TextBlock x:Name="VolumeGlyph" Style="{StaticResource DockGlyph}" />
-            </Button>
-            <Button x:Name="BatteryButton" AutomationProperties.Name="Baterai" Style="{StaticResource DockButton}" MinWidth="36">
-                <TextBlock x:Name="BatteryGlyph" Style="{StaticResource DockGlyph}" FontSize="17" />
-            </Button>
-            <Button x:Name="DndButton" AutomationProperties.Name="Jangan ganggu" Style="{StaticResource DockButton}" MinWidth="36">
-                <TextBlock x:Name="DndGlyph" Style="{StaticResource DockGlyph}" FontSize="15" />
-            </Button>
-
-            <StackPanel x:Name="NetSpeedPanel" VerticalAlignment="Center" Margin="8,0,6,0">
-                <TextBlock x:Name="DownText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular" />
-                <TextBlock x:Name="UpText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"
-                           Foreground="{StaticResource TextSecondaryBrush}" />
-            </StackPanel>
-
-            <StackPanel x:Name="WeatherPanel" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
-                <TextBlock x:Name="WeatherGlyph" FontFamily="Segoe UI Symbol" FontSize="17" VerticalAlignment="Center" />
-                <TextBlock x:Name="WeatherText" Margin="5,0,0,0" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
-                           Typography.NumeralAlignment="Tabular" />
-            </StackPanel>
-
-            <Button x:Name="ClockButton" AutomationProperties.Name="Jam" Style="{StaticResource DockButton}" Padding="10,0">
-                <StackPanel>
-                    <TextBlock x:Name="ClockText" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Right"
+                <StackPanel x:Name="WeatherPanel" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
+                    <TextBlock x:Name="WeatherGlyph" FontFamily="Segoe UI Symbol" FontSize="17" VerticalAlignment="Center" />
+                    <TextBlock x:Name="WeatherText" Margin="5,0,0,0" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
                                Typography.NumeralAlignment="Tabular" />
-                    <TextBlock x:Name="DateText" Style="{StaticResource DockCaption}" HorizontalAlignment="Right" />
                 </StackPanel>
-            </Button>
 
-            <Button x:Name="DesktopButton" AutomationProperties.Name="Desktop" Style="{StaticResource DockButton}" MinWidth="36" ToolTip="Tampilkan desktop">
-                <Border Width="16" Height="12" BorderBrush="White" BorderThickness="1.5" CornerRadius="2.5" Opacity="0.85" />
-            </Button>
-        </StackPanel>
+                <Button x:Name="ClockButton" AutomationProperties.Name="Jam" Style="{StaticResource DockButton}" Padding="10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- Only while Do Not Disturb is on. -->
+                        <TextBlock x:Name="DndBadge" Style="{StaticResource DockGlyph}" FontSize="13" Margin="0,0,9,0"
+                                   Foreground="{DynamicResource DockAccentBrush}" Visibility="Collapsed" />
+                        <StackPanel>
+                            <TextBlock x:Name="ClockText" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Right"
+                                       Typography.NumeralAlignment="Tabular" />
+                            <TextBlock x:Name="DateText" Style="{StaticResource DockCaption}" HorizontalAlignment="Right" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="DesktopButton" AutomationProperties.Name="Desktop" Style="{StaticResource DockButton}" MinWidth="36" ToolTip="Tampilkan desktop">
+                    <Border Width="16" Height="12" BorderBrush="White" BorderThickness="1.5" CornerRadius="2.5" Opacity="0.85" />
+                </Button>
+            </StackPanel>
+        </Grid>
     </Border>
 </Window>

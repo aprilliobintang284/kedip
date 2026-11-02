@@ -76,6 +76,7 @@ public partial class App : Application
             Water = new WaterService(settings, peeks),
             Shelf = new ShelfService(),
             Notifications = new NotificationService(settings, peeks),
+            Weather = new Kedip.Weather.WeatherService(settings),
         };
         _services.StartAll();
 
@@ -120,7 +121,7 @@ public partial class App : Application
         }
     }
 
-    private void OpenSettings()
+    internal void OpenSettings()
     {
         if (_services is null)
         {

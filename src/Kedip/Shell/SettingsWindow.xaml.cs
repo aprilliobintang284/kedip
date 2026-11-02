@@ -194,7 +194,6 @@ public partial class SettingsWindow : Window
         };
 
         BindSwitch(ReplaceTaskbarSwitch, s => s.DockReplaceTaskbar, (s, v) => s.DockReplaceTaskbar = v);
-        BindSwitch(DockTimerSwitch, s => s.DockTimer, (s, v) => s.DockTimer = v);
         BindSwitch(DockWeatherSwitch, s => s.DockWeather, (s, v) => s.DockWeather = v);
         BindSwitch(DockNetSwitch, s => s.DockNetSpeed, (s, v) => s.DockNetSpeed = v);
     }
@@ -279,6 +278,7 @@ public partial class SettingsWindow : Window
     private void SetUpPrayer()
     {
         BindSwitch(PrayerSwitch, s => s.PrayerEnabled, (s, v) => s.PrayerEnabled = v);
+        BindSwitch(WeatherSwitch, s => s.WeatherEnabled, (s, v) => s.WeatherEnabled = v);
 
         var names = new List<string>(_cities.Count + 1) { CustomCityName };
         names.AddRange(_cities.Select(c => c.Name));
@@ -486,7 +486,7 @@ public partial class SettingsWindow : Window
         NotificationAppsPanel.IsEnabled = s.NotificationsEnabled;
 
         bool custom = FindCity(s.PrayerCity) < 0;
-        PrayerLocation.IsEnabled = s.PrayerEnabled;
+        PrayerLocation.IsEnabled = s.PrayerEnabled || s.WeatherEnabled;
         PrayerReminderOptions.IsEnabled = s.PrayerEnabled;
         LatitudeRow.IsEnabled = custom;
         LongitudeRow.IsEnabled = custom;
@@ -737,6 +737,24 @@ public partial class SettingsWindow : Window
     }
 
     private void OnOpenDataFolder(object sender, RoutedEventArgs e) => AppInfo.OpenDataFolder();
+
+    private void OnCopyWindowsPins(object sender, RoutedEventArgs e)
+    {
+        var pins = Kedip.DockBar.WindowsPins.Read();
+        if (pins.Count == 0)
+        {
+            DockPinsHint.Text = "Tidak ada app yang disematkan di taskbar Windows.";
+            return;
+        }
+
+        Apply(s =>
+        {
+            s.DockPinned = pins;
+            s.DockPinnedSeeded = true;
+            s.DockPinsFromWindows = true;
+        });
+        DockPinsHint.Text = $"Disalin: {pins.Count} app dari taskbar Windows.";
+    }
 
     private void OnClosed(object? sender, EventArgs e)
     {

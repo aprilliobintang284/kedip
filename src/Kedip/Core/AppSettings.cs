@@ -70,7 +70,10 @@ public sealed class AppSettings
     public List<string> DockPinned { get; set; } = [];
 
     public bool DockPinnedSeeded { get; set; }
-    public bool DockTimer { get; set; } = true;
+
+    /// <summary>The pins were copied from the Windows taskbar once (the settings button copies them again).</summary>
+    public bool DockPinsFromWindows { get; set; }
+
     public bool DockWeather { get; set; } = true;
     public bool DockNetSpeed { get; set; } = true;
 
@@ -89,6 +92,10 @@ public sealed class AppSettings
 
     // Prayer times (defaults: Kab. Kendal, Jawa Tengah)
     public bool PrayerEnabled { get; set; } = true;
+
+    /// <summary>Weather tab in the notch and the temperature beside its clock (same place as the prayer times).</summary>
+    public bool WeatherEnabled { get; set; } = true;
+
     public string PrayerCity { get; set; } = "Kab. Kendal";
     public double Latitude { get; set; } = -7.026;
     public double Longitude { get; set; } = 110.169;

@@ -39,7 +39,46 @@ internal static class ShellItems
     }
 
     /// <summary>Exe behind an AppsFolder entry of a desktop app (empty for packaged apps).</summary>
-    public static string? TargetPath(string parsingName)
+    public static string? TargetPath(string parsingName) => GetString(parsingName, LinkTargetParsingPath);
+
+    /// <summary>The AppUserModelID a shortcut (or AppsFolder entry) carries, or null.</summary>
+    public static string? AppId(string parsingName) => GetString(parsingName, AppUserModelId);
+
+    /// <summary>Absolute parsing name of a serialized item id list (e.g. <c>::{…}\&lt;aumid&gt;</c> or a file path).</summary>
+    public static string? ParsingName(ReadOnlySpan<byte> idList)
+    {
+        if (idList.Length < 2)
+        {
+            return null;
+        }
+
+        IntPtr pidl = Marshal.AllocCoTaskMem(idList.Length + 2);
+        try
+        {
+            Marshal.Copy(idList.ToArray(), 0, pidl, idList.Length);
+            Marshal.WriteInt16(pidl, idList.Length, 0); // always terminated, even if the blob was cut short
+
+            if (SHGetNameFromIDList(pidl, SIGDN_DESKTOPABSOLUTEPARSING, out IntPtr name) != 0 || name == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            try
+            {
+                return Marshal.PtrToStringUni(name);
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(name);
+            }
+        }
+        finally
+        {
+            Marshal.FreeCoTaskMem(pidl);
+        }
+    }
+
+    private static string? GetString(string parsingName, PROPERTYKEY property)
     {
         var item = Create(parsingName);
         if (item is null)
@@ -49,7 +88,7 @@ internal static class ShellItems
 
         try
         {
-            var key = LinkTargetParsingPath;
+            var key = property;
             return item.GetString(ref key, out string value) == 0 && !string.IsNullOrWhiteSpace(value) ? value : null;
         }
         catch (COMException)
@@ -183,6 +222,30 @@ internal static class ShellItems
         return apps;
     }
 
+    /// <summary>
+    /// AppUserModelID of a packaged (Store / MSIX) process, e.g. <c>5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App</c>;
+    /// null for ordinary desktop programs. Their windows rarely carry the id themselves.
+    /// </summary>
+    public static string? PackagedAppId(uint processId)
+    {
+        IntPtr process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
+        if (process == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        try
+        {
+            uint length = 512;
+            var buffer = new char[length];
+            return GetApplicationUserModelId(process, ref length, buffer) == 0 && length > 1 ? new string(buffer, 0, (int)length - 1) : null;
+        }
+        finally
+        {
+            CloseHandle(process);
+        }
+    }
+
     /// <summary>Full exe path of a process, or null (works for elevated processes too).</summary>
     public static string? ProcessPath(uint processId)
     {
@@ -276,6 +339,7 @@ internal static class ShellItems
 
     private const uint SIGDN_NORMALDISPLAY = 0;
     private const uint SIGDN_PARENTRELATIVEPARSING = 0x80018001;
+    private const uint SIGDN_DESKTOPABSOLUTEPARSING = 0x80028000;
     private static readonly Guid BHID_EnumItems = new("94F60519-2850-4924-AA5A-D15E84868039");
 
     [ComImport]
@@ -408,6 +472,12 @@ internal static class ShellItems
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
     private static extern void SHCreateItemFromParsingName(
         string pszPath, IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IShellItem2 ppv);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetApplicationUserModelId(IntPtr process, ref uint length, char[] id);
+
+    [DllImport("shell32.dll")]
+    private static extern int SHGetNameFromIDList(IntPtr pidl, uint sigdn, out IntPtr name);
 
     [DllImport("shell32.dll")]
     private static extern int SHGetPropertyStoreForWindow(IntPtr hwnd, ref Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object? ppv);

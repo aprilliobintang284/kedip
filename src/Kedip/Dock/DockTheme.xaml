@@ -1,10 +1,36 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Shared look of the dock and its panels (dark glass, rounded, soft hover). -->
-        <SolidColorBrush x:Key="DockHover" Color="#1FFFFFFF" />
-        <SolidColorBrush x:Key="DockPress" Color="#12FFFFFF" />
-        <SolidColorBrush x:Key="DockLine" Color="#26FFFFFF" />
-        <SolidColorBrush x:Key="DockMenu" Color="#F2232326" />
+    <!-- Shared look of the dock and its panels: black smoked glass over the system blur, hairline edges, accent from Windows. -->
+        <LinearGradientBrush x:Key="DockSurface" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#8C0F0F12" />
+            <GradientStop Offset="1" Color="#AC060607" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="PanelSurface" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#A80E0E11" />
+            <GradientStop Offset="1" Color="#C4060607" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="DockSheen" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Offset="0" Color="#00FFFFFF" />
+            <GradientStop Offset="0.5" Color="#38FFFFFF" />
+            <GradientStop Offset="1" Color="#00FFFFFF" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="DockHover" Color="#1AFFFFFF" />
+        <SolidColorBrush x:Key="DockPress" Color="#0FFFFFFF" />
+        <SolidColorBrush x:Key="DockLine" Color="#1CFFFFFF" />
+        <SolidColorBrush x:Key="DockMenu" Color="#F20D0D0F" />
+        <SolidColorBrush x:Key="DockMenuEdge" Color="#24FFFFFF" />
+        <!-- Replaced per window with the Windows accent (see DockAccent). -->
+        <SolidColorBrush x:Key="DockAccentBrush" Color="#FF4CC2FF" />
+        <SolidColorBrush x:Key="DockAccentHoverBrush" Color="#E64CC2FF" />
+        <SolidColorBrush x:Key="DockOnAccentBrush" Color="#E6000000" />
+
+        <!-- One cell of the status group (network / volume / battery): hit area for its own tooltip. -->
+        <Style x:Key="StatusCell" TargetType="Border">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MinWidth" Value="26" />
+            <Setter Property="Padding" Value="3,0" />
+        </Style>
 
         <!-- Icon/tile button: rounded hover plate, slight press dip. -->
         <Style x:Key="DockButton" TargetType="Button">
@@ -72,7 +98,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{StaticResource DockMenu}" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="10"
+                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource DockMenuEdge}" BorderThickness="1" CornerRadius="10"
                                 Padding="5" MinWidth="190" Margin="0,0,0,6">
                             <ItemsPresenter />
                         </Border>
@@ -124,7 +150,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
-                        <Border Background="{StaticResource DockMenu}" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="7" Padding="9,5"
+                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource DockMenuEdge}" BorderThickness="1" CornerRadius="7" Padding="9,5"
                                 Margin="0,0,0,8">
                             <ContentPresenter TextBlock.FontSize="12" TextBlock.FontFamily="{StaticResource UiFont}" />
                         </Border>
@@ -134,38 +160,24 @@
         </Style>
 
     <SolidColorBrush x:Key="PanelCard" Color="#14FFFFFF" />
-    <SolidColorBrush x:Key="PanelActive" Color="#FF3D7BFD" />
-    <SolidColorBrush x:Key="PanelActiveHover" Color="#FF5B8FFF" />
+    <SolidColorBrush x:Key="PanelCardEdge" Color="#10FFFFFF" />
 
-    <!-- Quick-settings tile: Content is built in code (glyph, title, status line). Checked = active (blue). -->
-    <Style x:Key="QuickTile" TargetType="ToggleButton">
+    <!-- Half of a quick-settings tile (the toggle, or the chevron that opens its page); Tag = CornerRadius. -->
+    <Style x:Key="TilePart" TargetType="Button">
         <Setter Property="Focusable" Value="False" />
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="Width" Value="114" />
-        <Setter Property="Height" Value="84" />
-        <Setter Property="Margin" Value="4" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="Plate" CornerRadius="12" Background="{StaticResource PanelCard}" Padding="12,10">
-                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Stretch" />
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Hit" Background="Transparent"
+                            CornerRadius="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Plate" Property="Background" Value="#24FFFFFF" />
+                            <Setter TargetName="Hit" Property="Background" Value="#16FFFFFF" />
                         </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Plate" Property="Background" Value="{StaticResource PanelActive}" />
-                        </Trigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsChecked" Value="True" />
-                                <Condition Property="IsMouseOver" Value="True" />
-                            </MultiTrigger.Conditions>
-                            <Setter TargetName="Plate" Property="Background" Value="{StaticResource PanelActiveHover}" />
-                        </MultiTrigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Plate" Property="Opacity" Value="0.45" />
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Hit" Property="Background" Value="#0AFFFFFF" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -184,7 +196,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Plate" CornerRadius="17" Background="Transparent">
+                    <Border x:Name="Plate" CornerRadius="6" Background="Transparent">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -200,7 +212,7 @@
         </Setter>
     </Style>
 
-    <!-- Slider: thin track, white fill up to the thumb, round thumb. -->
+    <!-- Slider: thin track filled with the accent up to a ringed thumb (as in Windows). -->
     <Style x:Key="PanelSliderFill" TargetType="RepeatButton">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="IsTabStop" Value="False" />
@@ -223,23 +235,33 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
-                    <Grid Height="22" Background="Transparent">
+                    <Grid Height="24" Background="Transparent">
                         <Track x:Name="PART_Track">
                             <Track.DecreaseRepeatButton>
-                                <RepeatButton Style="{StaticResource PanelSliderFill}" Background="White" Command="Slider.DecreaseLarge" />
+                                <RepeatButton Style="{StaticResource PanelSliderFill}" Background="{DynamicResource DockAccentBrush}"
+                                              Command="Slider.DecreaseLarge" />
                             </Track.DecreaseRepeatButton>
                             <Track.IncreaseRepeatButton>
-                                <RepeatButton Style="{StaticResource PanelSliderFill}" Background="#38FFFFFF" Command="Slider.IncreaseLarge" />
+                                <RepeatButton Style="{StaticResource PanelSliderFill}" Background="#4DFFFFFF" Command="Slider.IncreaseLarge" />
                             </Track.IncreaseRepeatButton>
                             <Track.Thumb>
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Ellipse Width="16" Height="16" Fill="White">
-                                                <Ellipse.Effect>
-                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.35" />
-                                                </Ellipse.Effect>
-                                            </Ellipse>
+                                            <Grid Width="20" Height="20" Background="Transparent">
+                                                <Ellipse Fill="#FF3A3A3D" Stroke="#26FFFFFF" StrokeThickness="1" />
+                                                <Ellipse x:Name="Core" Width="10" Height="10" Fill="{DynamicResource DockAccentBrush}" />
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Core" Property="Width" Value="12" />
+                                                    <Setter TargetName="Core" Property="Height" Value="12" />
+                                                </Trigger>
+                                                <Trigger Property="IsDragging" Value="True">
+                                                    <Setter TargetName="Core" Property="Width" Value="8" />
+                                                    <Setter TargetName="Core" Property="Height" Value="8" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
@@ -251,16 +273,222 @@
         </Setter>
     </Style>
 
+    <!-- On/off switch for page headers. -->
+    <Style x:Key="PanelSwitch" TargetType="ToggleButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Width="40" Height="20" Background="Transparent">
+                        <Border x:Name="Track" CornerRadius="10" BorderThickness="1" BorderBrush="#B3FFFFFF" Background="#0FFFFFFF" />
+                        <Ellipse x:Name="Knob" Width="12" Height="12" Margin="4,0" HorizontalAlignment="Left" Fill="#D9FFFFFF" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource DockAccentBrush}" />
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource DockAccentBrush}" />
+                            <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right" />
+                            <Setter TargetName="Knob" Property="Fill" Value="{DynamicResource DockOnAccentBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Knob" Property="Width" Value="14" />
+                            <Setter TargetName="Knob" Property="Height" Value="14" />
+                            <Setter TargetName="Knob" Property="Margin" Value="3,0" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A row in a page list (network, device): content is built in code; Tag="on" marks the selected one. -->
+    <Style x:Key="PanelRow" TargetType="Button">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="0,1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Plate" CornerRadius="7" Background="Transparent" Padding="10,8">
+                        <ContentPresenter HorizontalAlignment="Stretch" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="#12FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="on">
+                            <Setter TargetName="Plate" Property="Background" Value="#17FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Text button for page footers ("Pengaturan ... lainnya"). -->
+    <Style x:Key="PanelLink" TargetType="Button">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Plate" CornerRadius="6" Background="Transparent" Padding="10,8">
+                        <ContentPresenter HorizontalAlignment="Left" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="{StaticResource DockHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="{StaticResource DockPress}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Filled action button ("Hubungkan"); PanelButton is the quiet one ("Putuskan"). -->
+    <Style x:Key="PanelAccentButton" TargetType="Button">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Foreground" Value="{DynamicResource DockOnAccentBrush}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="MinWidth" Value="96" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Plate" CornerRadius="6" Background="{DynamicResource DockAccentBrush}" Padding="14,6">
+                        <ContentPresenter HorizontalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="{DynamicResource DockAccentHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Plate" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="PanelButton" TargetType="Button">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="MinWidth" Value="96" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Plate" CornerRadius="6" Background="#1CFFFFFF" BorderBrush="#12FFFFFF" BorderThickness="1" Padding="14,5">
+                        <ContentPresenter HorizontalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="#28FFFFFF" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Plate" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small check box ("Hubungkan otomatis"). -->
+    <Style x:Key="PanelCheck" TargetType="CheckBox">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="4" BorderThickness="1" BorderBrush="#B3FFFFFF"
+                                Background="Transparent">
+                            <TextBlock x:Name="Tick" FontFamily="{StaticResource IconFont}" FontSize="11" Text="&#xE73E;"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource DockOnAccentBrush}"
+                                       Visibility="Hidden" />
+                        </Border>
+                        <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource DockAccentBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource DockAccentBrush}" />
+                            <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Password field for joining a network. -->
+    <Style x:Key="PanelPassword" TargetType="PasswordBox">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="CaretBrush" Value="White" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource DockAccentBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="Box" CornerRadius="6" Background="#14FFFFFF" BorderBrush="#26FFFFFF" BorderThickness="1,1,1,2" Padding="10,0">
+                        <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource DockAccentBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- An icon in the tray flyout. -->
+    <Style x:Key="TrayCell" TargetType="Button">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Width" Value="42" />
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Plate" CornerRadius="7" Background="Transparent" Margin="1">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="{StaticResource DockHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Plate" Property="Background" Value="{StaticResource DockPress}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Search box with a placeholder (Tag). -->
     <Style x:Key="SearchBox" TargetType="TextBox">
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         <Setter Property="CaretBrush" Value="White" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="SelectionBrush" Value="{StaticResource PanelActive}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource DockAccentBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="Box" CornerRadius="11" Background="#1AFFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1" Padding="12,0">
+                    <Border x:Name="Box" CornerRadius="8" Background="#14FFFFFF" BorderBrush="#22FFFFFF" BorderThickness="1,1,1,2" Padding="12,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -278,7 +506,7 @@
                             <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Box" Property="BorderBrush" Value="#66FFFFFF" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource DockAccentBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Automation;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -10,7 +11,6 @@ using System.Windows.Threading;
 using Kedip.Core;
 using Kedip.Interop;
 using Kedip.Power;
-using Kedip.Productivity;
 
 namespace Kedip.DockBar;
 
@@ -26,13 +26,12 @@ public partial class DockWindow : Window
     private static readonly TimeSpan SlideTime = TimeSpan.FromMilliseconds(240);
     private static readonly IEasingFunction SlideEase = Frozen(new CubicEase { EasingMode = EasingMode.EaseOut });
     private static readonly Brush DimDot = Frozen(new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)));
-    private static readonly Brush DndOn = Frozen(new SolidColorBrush(Color.FromRgb(0xBF, 0x9C, 0xFF)));
 
     private readonly AppServices _services;
     private readonly DockApps _apps = new();
     private readonly NetworkInfo _network = new();
     private readonly SystemVolume _volume = new();
-    private readonly WeatherInfo _weather = new();
+    private readonly TrayService _tray;
     private readonly DispatcherTimer _checkTimer;
     private readonly DispatcherTimer _liveTimer;
     private readonly DispatcherTimer _clockTimer;
@@ -50,6 +49,8 @@ public partial class DockWindow : Window
     {
         _services = services;
         InitializeComponent();
+        DockAccent.Apply(Resources);
+        _tray = new TrayService(Dispatcher);
         SeedPins();
 
         _checkTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(700) };
@@ -73,26 +74,26 @@ public partial class DockWindow : Window
         MouseEnter += (_, _) => Evaluate();
         Closed += OnClosed;
 
-        StartButton.Click += (_, _) => TogglePanel(() => new AppsPanelWindow(_services), alignRight: false);
+        StartButton.Click += (_, _) => TogglePanel(() => new AppsPanelWindow(_services), HorizontalAlignment.Left);
         StartButton.ContextMenu = QuickMenu.Start(this, () => _menuOpen = true, () =>
         {
             _menuOpen = false;
             Evaluate();
         });
-        TimerButton.Click += (_, _) => ToggleTimer();
-        NetworkButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), alignRight: true);
-        VolumeButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), alignRight: true);
-        BatteryButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), alignRight: true);
-        DndButton.Click += (_, _) => _services.Settings.Update(s => s.DoNotDisturb = !s.DoNotDisturb);
+        StatusButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), HorizontalAlignment.Right);
+        StatusButton.MouseWheel += OnStatusWheel;
+        TrayButton.Click += (_, _) => TogglePanel(
+            () => new TrayPanelWindow(_tray, _services.Settings.Current.DockReplaceTaskbar, _taskbarPeek, ToggleTaskbarPeek),
+            HorizontalAlignment.Center, TrayButton);
         ClockButton.Click += (_, _) => WinKeys.Win(WinKeys.N);
         DesktopButton.Click += (_, _) => WinKeys.Win(WinKeys.D);
-        TaskbarButton.Click += (_, _) => ToggleTaskbarPeek();
+        TrayGlyph.Text = WinKeys.Glyph(0xE70E);
 
         _services.Settings.Changed += OnSettingsChanged;
         _services.Foreground.Changed += OnForegroundChanged;
         _services.Power.Changed += OnPowerChanged;
-        _services.Pomodoro.Changed += OnPomodoroChanged;
-        _weather.Updated += OnWeatherUpdated;
+        _services.Weather.Updated += OnWeatherUpdated;
+        _tray.Changed += (_, _) => UpdateTrayButton();
     }
 
     private bool Animations => _services.Settings.Current.Animations;
@@ -135,7 +136,7 @@ public partial class DockWindow : Window
     {
         var s = _services.Settings.Current;
         bool replace = s.DockReplaceTaskbar;
-        TaskbarButton.Visibility = replace ? Visibility.Visible : Visibility.Collapsed;
+        UpdateTrayButton();
         if (!replace)
         {
             _taskbarPeek = false;
@@ -158,9 +159,6 @@ public partial class DockWindow : Window
         {
             _appBar?.Release();
         }
-
-        TaskbarGlyph.Text = WinKeys.Glyph(_taskbarPeek ? 0xE70D : 0xE70E);
-        TaskbarButton.ToolTip = _taskbarPeek ? "Sembunyikan taskbar Windows" : "Tampilkan taskbar Windows (ikon tray)";
     }
 
     private async void ToggleTaskbarPeek()
@@ -204,8 +202,11 @@ public partial class DockWindow : Window
         TaskbarControl.Hide();
     }
 
-    /// <summary>Opens a flyout above the dock (closing the other one), or closes it if it is already open.</summary>
-    private void TogglePanel<T>(Func<T> create, bool alignRight) where T : GlassPanel
+    /// <summary>
+    /// Opens a flyout above the dock (closing the other one), or closes it if it is already open. It lines up with the
+    /// dock's left or right edge, or centres on <paramref name="anchor"/>.
+    /// </summary>
+    private void TogglePanel<T>(Func<T> create, HorizontalAlignment align, FrameworkElement? anchor = null) where T : GlassPanel
     {
         if (_panel is T open && !open.IsClosing)
         {
@@ -226,16 +227,22 @@ public partial class DockWindow : Window
                 Evaluate();
             }
         };
-        panel.ShowAt(alignRight ? Left + ActualWidth : Left, ShownTop - 8, alignRight, Animations);
+        double x = align switch
+        {
+            HorizontalAlignment.Right => Left + ActualWidth,
+            HorizontalAlignment.Center when anchor is not null => Left + anchor.TranslatePoint(new Point(anchor.ActualWidth / 2, 0), this).X,
+            _ => Left,
+        };
+        panel.ShowAt(x, ShownTop - 8, align, Animations);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ApplyWidgetVisibility();
         UpdateClock();
-        UpdateTimer();
         UpdateBattery();
         UpdateDnd();
+        _tray.Start();
         RefreshWeather();
         _appsSignature = "";
         LiveTick();
@@ -254,8 +261,8 @@ public partial class DockWindow : Window
         _services.Settings.Changed -= OnSettingsChanged;
         _services.Foreground.Changed -= OnForegroundChanged;
         _services.Power.Changed -= OnPowerChanged;
-        _services.Pomodoro.Changed -= OnPomodoroChanged;
-        _weather.Updated -= OnWeatherUpdated;
+        _services.Weather.Updated -= OnWeatherUpdated;
+        _tray.Dispose();
         _volume.Dispose();
         _appBar?.Release();
         if (TaskbarControl.IsHiddenByKedip)
@@ -264,20 +271,30 @@ public partial class DockWindow : Window
         }
     }
 
+    /// <summary>Starts out with the apps pinned to the Windows taskbar (in its order), or a default set if there are none.</summary>
     private void SeedPins()
     {
-        if (!_services.Settings.Current.DockPinnedSeeded)
+        var s = _services.Settings.Current;
+        if (s.DockPinsFromWindows)
         {
-            _services.Settings.Update(s =>
-            {
-                if (s.DockPinned.Count == 0)
-                {
-                    s.DockPinned.AddRange(DockApps.DefaultPins);
-                }
-
-                s.DockPinnedSeeded = true;
-            });
+            return;
         }
+
+        var pins = WindowsPins.Read();
+        _services.Settings.Update(settings =>
+        {
+            if (pins.Count > 0)
+            {
+                settings.DockPinned = pins;
+            }
+            else if (settings.DockPinned.Count == 0)
+            {
+                settings.DockPinned.AddRange(DockApps.DefaultPins);
+            }
+
+            settings.DockPinnedSeeded = true;
+            settings.DockPinsFromWindows = true;
+        });
     }
 
     // ---- Placement & smart hide --------------------------------------------------------------------------------
@@ -363,6 +380,14 @@ public partial class DockWindow : Window
     {
         RefreshApps();
         RefreshNetworkAndVolume();
+        _tray.Prune();
+    }
+
+    private void UpdateTrayButton()
+    {
+        int count = _tray.Visible.Count();
+        TrayButton.Visibility = count > 0 || _services.Settings.Current.DockReplaceTaskbar ? Visibility.Visible : Visibility.Collapsed;
+        TrayButton.ToolTip = count > 0 ? $"Ikon tersembunyi ({count})" : "Taskbar Windows";
     }
 
     private void RefreshApps()
@@ -438,6 +463,7 @@ public partial class DockWindow : Window
             MinWidth = 0,
             ToolTip = app.Name,
         };
+        AutomationProperties.SetName(tile, app.Name + (app.IsRunning ? $" ({app.Windows.Count})" : ""));
         tile.Click += (_, _) =>
         {
             DockApps.Click(app);
@@ -498,9 +524,9 @@ public partial class DockWindow : Window
 
         NetworkGlyph.Text = _network.Connection == ConnectionKind.Ethernet ? "\uE839" : "\uE701";
         NetworkGlyph.Opacity = _network.Connection == ConnectionKind.None ? 0.35 : 1;
-        NetworkButton.ToolTip = _network.Connection switch
+        NetworkCell.ToolTip = _network.Connection switch
         {
-            ConnectionKind.Wifi => "Wi-Fi tersambung",
+            ConnectionKind.Wifi => RadioControl.ConnectedNetworkName() is { } ssid ? $"{ssid}\nAkses internet" : "Wi-Fi tersambung",
             ConnectionKind.Ethernet => "Ethernet tersambung",
             _ => "Tidak ada koneksi",
         };
@@ -511,7 +537,7 @@ public partial class DockWindow : Window
                 : volume.Level < 0.34 ? "\uE993"
                 : volume.Level < 0.67 ? "\uE994"
                 : "\uE995";
-            VolumeButton.ToolTip = volume.Muted ? "Suara dibisukan" : $"Volume {Math.Round(volume.Level * 100)}%";
+            VolumeCell.ToolTip = volume.Muted ? "Suara dibisukan" : $"Volume {Math.Round(volume.Level * 100)}%";
         }
         else
         {
@@ -522,45 +548,38 @@ public partial class DockWindow : Window
     private void UpdateBattery()
     {
         var power = _services.Power;
-        BatteryButton.Visibility = power.HasBattery ? Visibility.Visible : Visibility.Collapsed;
+        BatteryCell.Visibility = power.HasBattery ? Visibility.Visible : Visibility.Collapsed;
         int level = Math.Clamp(power.Percent / 10, 0, 10);
         BatteryGlyph.Text = power.IsCharging ? char.ConvertFromUtf32(0xEBAB + level) : PowerService.BatteryGlyph(power.Percent);
-        BatteryButton.ToolTip = $"Baterai {power.Percent}%" + (power.IsCharging ? " · mengisi daya" : "");
+        BatteryPercent.Text = $"{power.Percent}%";
+        BatteryCell.ToolTip = $"Baterai {power.Percent}%" + (power.IsCharging ? " · mengisi daya" : "");
     }
 
+    /// <summary>A small moon next to the clock while Do Not Disturb is on (it is switched in the control panel).</summary>
     private void UpdateDnd()
     {
         bool on = _services.Settings.Current.DoNotDisturb;
-        DndGlyph.Text = "\uE708";
-        DndGlyph.Foreground = on ? DndOn : (Brush)FindResource("TextPrimaryBrush");
-        DndGlyph.Opacity = on ? 1 : 0.55;
-        DndButton.ToolTip = on ? "Jangan ganggu: nyala (klik untuk mematikan)" : "Jangan ganggu: mati (klik untuk menyalakan)";
+        DndBadge.Text = WinKeys.Glyph(0xE708);
+        DndBadge.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void UpdateTimer()
+    /// <summary>Scrolling over the status group changes the volume in steps of 2, like the Windows tray.</summary>
+    private void OnStatusWheel(object sender, MouseWheelEventArgs e)
     {
-        var pomodoro = _services.Pomodoro;
-        bool active = pomodoro.Phase != PomodoroPhase.Idle;
-        TimerText.Text = active ? $"{(int)pomodoro.Remaining.TotalMinutes:00}:{pomodoro.Remaining.Seconds:00}" : "--:--";
-        TimerCaption.Text = pomodoro.Phase switch
+        if (_volume.Read() is not { } volume)
         {
-            PomodoroPhase.Focus => pomodoro.IsRunning ? "fokus" : "dijeda",
-            PomodoroPhase.ShortBreak or PomodoroPhase.LongBreak => pomodoro.IsRunning ? "istirahat" : "dijeda",
-            _ => "timer",
-        };
-    }
+            return;
+        }
 
-    private void ToggleTimer()
-    {
-        var pomodoro = _services.Pomodoro;
-        if (pomodoro.IsRunning)
+        float level = Math.Clamp(volume.Level + Math.Sign(e.Delta) * 0.02f, 0, 1);
+        _volume.SetLevel(level);
+        if (volume.Muted && e.Delta > 0)
         {
-            pomodoro.Pause();
+            _volume.SetMuted(false);
         }
-        else
-        {
-            pomodoro.StartOrResume();
-        }
+
+        e.Handled = true;
+        RefreshNetworkAndVolume();
     }
 
     private void UpdateClock()
@@ -568,7 +587,8 @@ public partial class DockWindow : Window
         var now = DateTime.Now;
         ClockText.Text = now.ToString("HH:mm", CultureInfo.InvariantCulture);
         DateText.Text = now.ToString("d/M/yyyy", CultureInfo.InvariantCulture);
-        ClockButton.ToolTip = now.ToString("dddd, d MMMM yyyy", CultureInfo.GetCultureInfo("id-ID"));
+        ClockButton.ToolTip = now.ToString("dddd, d MMMM yyyy", CultureInfo.GetCultureInfo("id-ID"))
+            + (_services.Settings.Current.DoNotDisturb ? "\nJangan ganggu nyala" : "");
         _clockTimer.Interval = TimeSpan.FromSeconds(60 - now.Second) + TimeSpan.FromMilliseconds(50);
         _clockTimer.Start();
         if (now.Minute % 10 == 0)
@@ -582,16 +602,15 @@ public partial class DockWindow : Window
         var s = _services.Settings.Current;
         if (s.DockWeather)
         {
-            _weather.RefreshIfStale(s.Latitude, s.Longitude);
+            _services.Weather.RefreshIfStale();
         }
     }
 
     private void ApplyWidgetVisibility()
     {
         var s = _services.Settings.Current;
-        TimerButton.Visibility = s.DockTimer ? Visibility.Visible : Visibility.Collapsed;
         NetSpeedPanel.Visibility = s.DockNetSpeed ? Visibility.Visible : Visibility.Collapsed;
-        WeatherPanel.Visibility = s.DockWeather && _weather.Temperature is not null ? Visibility.Visible : Visibility.Collapsed;
+        WeatherPanel.Visibility = s.DockWeather && _services.Weather.HasData ? Visibility.Visible : Visibility.Collapsed;
     }
 
     // ---- Events ------------------------------------------------------------------------------------------------
@@ -624,12 +643,11 @@ public partial class DockWindow : Window
 
     private void OnPowerChanged(object? sender, EventArgs e) => UpdateBattery();
 
-    private void OnPomodoroChanged(object? sender, EventArgs e) => UpdateTimer();
-
     private void OnWeatherUpdated(object? sender, EventArgs e)
     {
-        WeatherGlyph.Text = _weather.Glyph;
-        WeatherText.Text = _weather.Temperature is { } t ? $"{Math.Round(t)}°" : "";
+        var weather = _services.Weather;
+        WeatherGlyph.Text = weather.Glyph();
+        WeatherText.Text = weather.Temperature is { } t ? $"{Math.Round(t)}°" : "";
         WeatherPanel.ToolTip = $"Cuaca {_services.Settings.Current.PrayerCity}";
         ApplyWidgetVisibility();
     }

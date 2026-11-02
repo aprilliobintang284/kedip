@@ -1,0 +1,17 @@
+<local:GlassPanel x:Class="Kedip.DockBar.TrayPanelWindow"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:local="clr-namespace:Kedip.DockBar"
+                  Title="Ikon tersembunyi">
+    <Border Background="{StaticResource PanelSurface}">
+        <StackPanel Margin="8">
+            <WrapPanel x:Name="Icons" MaxWidth="220" HorizontalAlignment="Left" />
+            <TextBlock x:Name="EmptyText" Text="Belum ada ikon tray" Margin="10,8" FontSize="12.5"
+                       Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed" />
+            <StackPanel x:Name="TaskbarRow" Visibility="Collapsed">
+                <Border Height="1" Margin="4,6" Background="{StaticResource DockLine}" />
+                <Button x:Name="TaskbarToggle" Style="{StaticResource PanelLink}" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</local:GlassPanel>

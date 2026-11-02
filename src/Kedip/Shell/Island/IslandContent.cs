@@ -5,7 +5,7 @@ namespace Kedip.Shell.Island;
 
 internal enum IslandMode { Collapsed, Peek, Expanded }
 
-internal enum IslandTab { Music, Prayer, Timer, Shelf }
+internal enum IslandTab { Music, Prayer, Weather, Timer, Shelf }
 
 internal enum CentreContent { Clock, Eyes, Lyric }
 

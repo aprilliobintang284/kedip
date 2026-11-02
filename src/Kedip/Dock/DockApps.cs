@@ -43,6 +43,7 @@ internal sealed class DockApps
 
     private readonly Dictionary<string, (string Name, ImageSource? Icon, string? Exe)> _identities = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<uint, string?> _processPaths = [];
+    private readonly Dictionary<uint, string?> _processAppIds = [];
     private readonly Dictionary<IntPtr, string?> _windowIds = [];
 
     /// <summary>Pinned apps (in order) followed by running unpinned ones. UI thread.</summary>
@@ -62,7 +63,7 @@ internal sealed class DockApps
         var extra = new Dictionary<string, DockApp>(StringComparer.OrdinalIgnoreCase);
         foreach (var w in windows)
         {
-            var owner = apps.FirstOrDefault(a => w.AppId is not null && string.Equals(a.AppId, w.AppId, StringComparison.OrdinalIgnoreCase))
+            var owner = apps.FirstOrDefault(a => SameAppId(a.AppId, w.AppId))
                 ?? apps.FirstOrDefault(a => w.ExePath is not null && SameApp(a.ExePath, w.ExePath));
             if (owner is null)
             {
@@ -80,6 +81,24 @@ internal sealed class DockApps
 
         apps.AddRange(extra.Values);
         return apps;
+    }
+
+    /// <summary>Same AppUserModelID, or for packaged apps the same package ("Publisher.App_hash!Entry" up to the "!").</summary>
+    private static bool SameAppId(string? pinned, string? window)
+    {
+        if (pinned is null || window is null)
+        {
+            return false;
+        }
+
+        if (string.Equals(pinned, window, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        int a = pinned.IndexOf('!');
+        int b = window.IndexOf('!');
+        return a > 0 && a == b && pinned.AsSpan(0, a).Equals(window.AsSpan(0, b), StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -214,11 +233,15 @@ internal sealed class DockApps
             }
 
             var (name, icon) = AppIdentity.Get(id);
-            // File Explorer's Start entry is a shell item, not a link; its windows run from explorer.exe.
-            string? exe = ShellItems.TargetPath(parsing)
-                ?? (string.Equals(id, "Microsoft.Windows.Explorer", StringComparison.OrdinalIgnoreCase)
-                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe")
-                    : null);
+            // File Explorer's Start entry points at a shell folder, not a program; its windows run from explorer.exe.
+            string? exe = string.Equals(id, "Microsoft.Windows.Explorer", StringComparison.OrdinalIgnoreCase)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe")
+                : ShellItems.TargetPath(parsing);
+            if (exe is not null && !exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                exe = null;
+            }
+
             return (fallbackName is not null && name == AppIdentity.FallbackName(id) ? fallbackName : name, icon, exe);
         }
 
@@ -263,7 +286,17 @@ internal sealed class DockApps
 
             if (!_windowIds.TryGetValue(hwnd, out string? appId))
             {
+                // The window's own id (UWP frames, Chrome profiles …), else the id of its packaged process (Store apps).
                 appId = ShellItems.WindowAppId(hwnd);
+                if (appId is null)
+                {
+                    if (!_processAppIds.TryGetValue(pid, out appId))
+                    {
+                        appId = ShellItems.PackagedAppId(pid);
+                        _processAppIds[pid] = appId;
+                    }
+                }
+
                 _windowIds[hwnd] = appId;
             }
 
@@ -275,6 +308,7 @@ internal sealed class DockApps
         foreach (uint pid in _processPaths.Keys.Where(p => !seenPids.Contains(p)).ToList())
         {
             _processPaths.Remove(pid);
+            _processAppIds.Remove(pid);
         }
 
         foreach (IntPtr hwnd in _windowIds.Keys.Where(h => !seenHwnds.Contains(h)).ToList())
@@ -285,16 +319,22 @@ internal sealed class DockApps
         return result;
     }
 
+    /// <summary>
+    /// The windows the Windows taskbar would show: visible, not cloaked, unowned or forced with WS_EX_APPWINDOW, and no
+    /// tool/no-activate windows unless forced. Kedip's own windows only when they ask for a taskbar button (settings).
+    /// </summary>
     private static bool IsAppWindow(IntPtr hwnd, uint ownPid, out uint pid)
     {
         pid = 0;
-        if (!NativeMethods.IsWindowVisible(hwnd) || GetWindow(hwnd, GW_OWNER) != IntPtr.Zero || GetWindowTextLength(hwnd) == 0)
+        if (!NativeMethods.IsWindowVisible(hwnd) || GetWindowTextLength(hwnd) == 0)
         {
             return false;
         }
 
         long ex = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE).ToInt64();
-        if ((ex & WS_EX_APPWINDOW) == 0 && (ex & (NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_NOACTIVATE)) != 0)
+        bool forced = (ex & WS_EX_APPWINDOW) != 0;
+        if (!forced && (GetWindow(hwnd, GW_OWNER) != IntPtr.Zero
+                        || (ex & (NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_NOACTIVATE)) != 0))
         {
             return false;
         }
@@ -305,7 +345,7 @@ internal sealed class DockApps
         }
 
         NativeMethods.GetWindowThreadProcessId(hwnd, out pid);
-        if (pid == ownPid)
+        if (pid == ownPid && !forced)
         {
             return false;
         }

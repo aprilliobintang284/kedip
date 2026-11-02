@@ -8,6 +8,7 @@ internal static class Glyphs
     public static readonly string Moon = Of(0xE708);
     public static readonly string Timer = Of(0xE916);
     public static readonly string Shelf = Of(0xE7B8);
+    public static readonly string Cloud = Of(0xE753);
     public static readonly string Bolt = Of(0xE945);
     public static readonly string Info = Of(0xE946);
     public static readonly string Drop = Of(0xEB42);

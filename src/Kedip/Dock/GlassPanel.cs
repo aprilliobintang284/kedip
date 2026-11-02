@@ -16,6 +16,7 @@ public class GlassPanel : Window
     private static readonly IEasingFunction Rise = Frozen(new CubicEase { EasingMode = EasingMode.EaseOut });
     private bool _closing;
     private long _shownAt;
+    private double _bottom = double.NaN;
 
     public GlassPanel()
     {
@@ -32,6 +33,7 @@ public class GlassPanel : Window
         Foreground = (Brush)Application.Current.FindResource("TextPrimaryBrush");
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Kedip;component/Dock/DockTheme.xaml", UriKind.Relative) });
+        DockAccent.Apply(Resources);
 
         SourceInitialized += (_, _) => Glass.Apply(new WindowInteropHelper(this).Handle, noActivate: false);
         Deactivated += (_, _) =>
@@ -41,6 +43,15 @@ public class GlassPanel : Window
             if (Environment.TickCount64 - _shownAt > 400)
             {
                 CloseSmooth();
+            }
+        };
+        SizeChanged += (_, e) =>
+        {
+            // Pages of different heights: grow upwards, keeping the bottom edge above the dock.
+            if (e.HeightChanged && !double.IsNaN(_bottom) && !_closing)
+            {
+                BeginAnimation(TopProperty, null);
+                Top = Math.Round(_bottom - ActualHeight);
             }
         };
         PreviewKeyDown += (_, e) =>
@@ -54,15 +65,24 @@ public class GlassPanel : Window
 
     public bool IsClosing => _closing;
 
-    /// <summary>Shows the panel with its bottom at <paramref name="bottom"/> (DIP), left- or right-aligned to <paramref name="x"/>.</summary>
-    public void ShowAt(double x, double bottom, bool alignRight, bool animate)
+    /// <summary>
+    /// Shows the panel with its bottom at <paramref name="bottom"/> (DIP): its left edge, right edge or centre at
+    /// <paramref name="x"/>, kept on screen.
+    /// </summary>
+    public void ShowAt(double x, double bottom, HorizontalAlignment align, bool animate)
     {
         Left = -10000;
         Top = -10000;
         Show();
         UpdateLayout();
         double screen = SystemParameters.PrimaryScreenWidth;
-        Left = Math.Round(Math.Clamp(alignRight ? x - ActualWidth : x, 8, screen - ActualWidth - 8));
+        double left = align switch
+        {
+            HorizontalAlignment.Right => x - ActualWidth,
+            HorizontalAlignment.Center => x - ActualWidth / 2,
+            _ => x,
+        };
+        Left = Math.Round(Math.Clamp(left, 8, screen - ActualWidth - 8));
         double top = Math.Round(bottom - ActualHeight);
         _shownAt = Environment.TickCount64;
         DockApps.Activate(new WindowInteropHelper(this).Handle);
@@ -73,7 +93,9 @@ public class GlassPanel : Window
             content.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(160)));
         }
 
-        BeginAnimation(TopProperty, new DoubleAnimation(top + 14, top, animate ? TimeSpan.FromMilliseconds(220) : TimeSpan.Zero) { EasingFunction = Rise });
+        var rise = new DoubleAnimation(top + 14, top, animate ? TimeSpan.FromMilliseconds(220) : TimeSpan.Zero) { EasingFunction = Rise };
+        rise.Completed += (_, _) => _bottom = bottom;
+        BeginAnimation(TopProperty, rise);
     }
 
     public void CloseSmooth()

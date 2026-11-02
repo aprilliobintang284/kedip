@@ -1,8 +1,6 @@
 using System.Globalization;
-using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using Kedip.Core;
 
 namespace Kedip.DockBar;
@@ -121,6 +119,9 @@ internal sealed class SystemVolume : IDisposable
         _endpoint?.SetMute(muted, ref context);
     }
 
+    /// <summary>Looks the default device up again on the next read (after switching outputs).</summary>
+    public void Refresh() => _checkedAt = long.MinValue;
+
     public void Dispose()
     {
         Release();
@@ -210,76 +211,4 @@ internal sealed class SystemVolume : IDisposable
         [PreserveSig] int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid context);
         [PreserveSig] int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
     }
-}
-
-/// <summary>Current weather from Open-Meteo (free, no key) for the configured city; refreshed every 30 minutes.</summary>
-internal sealed class WeatherInfo
-{
-    private static readonly Lazy<HttpClient> Http = new(() =>
-    {
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Kedip/0.1 (personal notch app)");
-        return client;
-    });
-
-    private DateTime _fetchedAt = DateTime.MinValue;
-    private (double Lat, double Lon) _place;
-    private bool _busy;
-
-    public double? Temperature { get; private set; }
-    public int Code { get; private set; }
-    public bool IsDay { get; private set; } = true;
-
-    /// <summary>Raised on the UI thread after a successful update.</summary>
-    public event EventHandler? Updated;
-
-    /// <summary>Fetches when stale (30 min) or the place changed. Call on the UI thread.</summary>
-    public async void RefreshIfStale(double latitude, double longitude)
-    {
-        if (_busy || (_place == (latitude, longitude) && DateTime.UtcNow - _fetchedAt < TimeSpan.FromMinutes(30)))
-        {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            string url = string.Create(CultureInfo.InvariantCulture,
-                $"https://api.open-meteo.com/v1/forecast?latitude={latitude:0.###}&longitude={longitude:0.###}&current=temperature_2m,weather_code,is_day");
-            using var response = await Http.Value.GetAsync(url).ConfigureAwait(true);
-            if (!response.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            using var doc = JsonDocument.Parse(await response.Content.ReadAsStreamAsync().ConfigureAwait(true));
-            var current = doc.RootElement.GetProperty("current");
-            Temperature = current.GetProperty("temperature_2m").GetDouble();
-            Code = current.GetProperty("weather_code").GetInt32();
-            IsDay = current.TryGetProperty("is_day", out var day) && day.GetInt32() == 1;
-            _place = (latitude, longitude);
-            _fetchedAt = DateTime.UtcNow;
-            Updated?.Invoke(this, EventArgs.Empty);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"Weather update failed: {ex.Message}");
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    /// <summary>A Segoe UI Symbol character for the WMO weather code.</summary>
-    public string Glyph => Code switch
-    {
-        0 => IsDay ? "☀" : "☾",
-        1 or 2 => IsDay ? "⛅" : "☁",
-        3 or 45 or 48 => "☁",
-        >= 51 and <= 67 or >= 80 and <= 82 => "☔",
-        >= 71 and <= 77 or 85 or 86 => "❄",
-        >= 95 => "⛈",
-        _ => "☁",
-    };
 }

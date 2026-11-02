@@ -1,0 +1,67 @@
+<UserControl x:Class="Kedip.Views.Panels.WeatherPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+             mc:Ignorable="po"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+    <!-- Area: 440x150 DIP on black. Left: now (temperature, sky, feels-like, high/low); right: the next hours + details. -->
+    <UserControl.Resources>
+        <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
+        <SolidColorBrush x:Key="DividerBrush" po:Freeze="True" Color="#14FFFFFF" />
+        <SolidColorBrush x:Key="SoftTextBrush" po:Freeze="True" Color="#D9FFFFFF" />
+        <SolidColorBrush x:Key="NowBrush" po:Freeze="True" Color="#14FFFFFF" />
+    </UserControl.Resources>
+
+    <Grid TextElement.FontFamily="{StaticResource UiFont}"
+          TextElement.Foreground="{StaticResource TextPrimaryBrush}"
+          TextOptions.TextFormattingMode="Display"
+          Typography.NumeralAlignment="Tabular">
+
+        <Grid x:Name="ContentRoot" Margin="16,10,16,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="146" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Now -->
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Height="16">
+                    <TextBlock x:Name="PlaceGlyph" FontFamily="{StaticResource IconFont}" FontSize="11" VerticalAlignment="Center"
+                               Margin="0,0,5,0" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock x:Name="PlaceText" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="124"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Height="46" Margin="0,2,0,0">
+                    <TextBlock x:Name="NowGlyph" FontFamily="Segoe UI Symbol" FontSize="26" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock x:Name="NowTemp" FontFamily="{StaticResource DisplayFont}" FontSize="36" FontWeight="SemiBold"
+                               VerticalAlignment="Center" TextOptions.TextFormattingMode="Ideal" />
+                </StackPanel>
+
+                <TextBlock x:Name="SkyText" FontSize="13" FontWeight="SemiBold" Height="18" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="RangeText" FontSize="11.5" Margin="0,3,0,0" Height="16" TextTrimming="CharacterEllipsis"
+                           Foreground="{StaticResource SoftTextBrush}" />
+            </StackPanel>
+
+            <Rectangle Grid.Column="1" Width="1" Margin="0,8" HorizontalAlignment="Center" Fill="{StaticResource DividerBrush}" />
+
+            <!-- Next hours (cells built in code) and a details line. -->
+            <Grid Grid.Column="2" VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <UniformGrid x:Name="HoursGrid" Rows="1" Height="86" />
+                <TextBlock x:Name="DetailText" Grid.Row="1" Margin="2,10,0,0" FontSize="11" TextTrimming="CharacterEllipsis"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+            </Grid>
+        </Grid>
+
+        <TextBlock x:Name="LoadingText" Text="Memuat cuaca…" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed" />
+    </Grid>
+</UserControl>

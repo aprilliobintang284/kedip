@@ -4,6 +4,7 @@ using Kedip.Notifications;
 using Kedip.Power;
 using Kedip.Prayer;
 using Kedip.Productivity;
+using Kedip.Weather;
 
 namespace Kedip.Core;
 
@@ -29,9 +30,10 @@ public sealed class AppServices : IDisposable
     public required WaterService Water { get; init; }
     public required ShelfService Shelf { get; init; }
     public required NotificationService Notifications { get; init; }
+    public required WeatherService Weather { get; init; }
 
     private IEnumerable<IAppService> All =>
-        [Foreground, Mascot, Media, Lyrics, Prayer, Power, Pomodoro, Water, Shelf, Notifications];
+        [Foreground, Mascot, Media, Lyrics, Prayer, Power, Pomodoro, Water, Shelf, Notifications, Weather];
 
     /// <summary>Starts every service; one failing service is logged and does not stop the others.</summary>
     public void StartAll()

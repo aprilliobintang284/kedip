@@ -16,14 +16,31 @@ internal static class TaskbarControl
     public static bool IsHiddenByKedip { get; private set; }
 
     /// <summary>Primary taskbar is currently on screen.</summary>
-    public static bool IsVisible => FindWindow("Shell_TrayWnd", null) is var hwnd && hwnd != IntPtr.Zero && NativeMethods.IsWindowVisible(hwnd);
+    public static bool IsVisible => ExplorerTray() is var hwnd && hwnd != IntPtr.Zero && NativeMethods.IsWindowVisible(hwnd);
+
+    /// <summary>Explorer's primary taskbar window (skipping the hidden one Kedip's tray service owns).</summary>
+    public static IntPtr ExplorerTray()
+    {
+        uint own = (uint)Environment.ProcessId;
+        IntPtr hwnd = IntPtr.Zero;
+        while ((hwnd = FindWindowEx(IntPtr.Zero, hwnd, "Shell_TrayWnd", null)) != IntPtr.Zero)
+        {
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+            if (pid != own)
+            {
+                return hwnd;
+            }
+        }
+
+        return IntPtr.Zero;
+    }
 
     /// <summary>Screen rectangle (px) of the primary taskbar, when visible.</summary>
     public static NativeMethods.RECT? VisibleRect
     {
         get
         {
-            IntPtr hwnd = FindWindow("Shell_TrayWnd", null);
+            IntPtr hwnd = ExplorerTray();
             return hwnd != IntPtr.Zero && NativeMethods.IsWindowVisible(hwnd) && NativeMethods.GetWindowRect(hwnd, out var r) ? r : null;
         }
     }
@@ -66,7 +83,7 @@ internal static class TaskbarControl
     private static IEnumerable<IntPtr> Taskbars()
     {
         var list = new List<IntPtr>();
-        IntPtr primary = FindWindow("Shell_TrayWnd", null);
+        IntPtr primary = ExplorerTray();
         if (primary != IntPtr.Zero)
         {
             list.Add(primary);
@@ -101,9 +118,6 @@ internal static class TaskbarControl
 
     private const int SW_HIDE = 0;
     private const int SW_SHOWNA = 8;
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern IntPtr FindWindow(string className, string? windowName);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr childAfter, string className, string? windowName);

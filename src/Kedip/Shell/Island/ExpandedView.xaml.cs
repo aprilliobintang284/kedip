@@ -31,7 +31,10 @@ public partial class ExpandedView : UserControl
         DropGlyph.Text = Glyphs.Download;
         TopRow.MouseLeftButtonUp += OnTopRowClick;
         _services.Power.Changed += (_, _) => UpdateBattery();
+        _services.Weather.Updated += (_, _) => UpdateWeather();
+        _services.Settings.Changed += (_, _) => UpdateWeather();
         UpdateBattery();
+        UpdateWeather();
         RebuildTabs();
     }
 
@@ -75,7 +78,7 @@ public partial class ExpandedView : UserControl
     internal void RebuildTabs()
     {
         var settings = _services.Settings.Current;
-        var wanted = new List<IslandTab>(4);
+        var wanted = new List<IslandTab>(5);
         if (settings.MusicEnabled)
         {
             wanted.Add(IslandTab.Music);
@@ -84,6 +87,11 @@ public partial class ExpandedView : UserControl
         if (settings.PrayerEnabled)
         {
             wanted.Add(IslandTab.Prayer);
+        }
+
+        if (settings.WeatherEnabled)
+        {
+            wanted.Add(IslandTab.Weather);
         }
 
         wanted.Add(IslandTab.Timer);
@@ -172,6 +180,7 @@ public partial class ExpandedView : UserControl
         {
             IslandTab.Music => (Glyphs.Music, "Musik"),
             IslandTab.Prayer => (Glyphs.Moon, "Sholat"),
+            IslandTab.Weather => (Glyphs.Cloud, "Cuaca"),
             IslandTab.Timer => (Glyphs.Timer, "Timer"),
             _ => (Glyphs.Shelf, "Shelf"),
         };
@@ -211,6 +220,7 @@ public partial class ExpandedView : UserControl
             {
                 IslandTab.Music => new MusicPanel(_services),
                 IslandTab.Prayer => new PrayerPanel(_services),
+                IslandTab.Weather => new WeatherPanel(_services),
                 IslandTab.Timer => new TimerPanel(_services),
                 _ => new ShelfPanel(_services),
             };
@@ -268,6 +278,19 @@ public partial class ExpandedView : UserControl
         Battery.Percent = power.Percent;
         Battery.IsCharging = power.IsCharging;
         BatteryText.Text = string.Create(CultureInfo.InvariantCulture, $"{Math.Clamp(power.Percent, 0, 100)}%");
+    }
+
+    /// <summary>"☁ 26°" before the clock while weather is on.</summary>
+    private void UpdateWeather()
+    {
+        var weather = _services.Weather;
+        bool show = _services.Settings.Current.WeatherEnabled && weather.Temperature is not null;
+        WeatherStatus.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (show)
+        {
+            WeatherGlyph.Text = weather.Glyph();
+            WeatherText.Text = string.Create(CultureInfo.InvariantCulture, $"{Math.Round(weather.Temperature!.Value)}°");
+        }
     }
 
     private void OnTopRowClick(object sender, MouseButtonEventArgs e)
