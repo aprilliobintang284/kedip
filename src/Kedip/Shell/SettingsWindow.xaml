@@ -112,7 +112,7 @@
                             </s:SettingRow>
                             <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="TuckMusicLineSwitch" Content="Garis musik"
-                                      Tag="Saat mengecil dan ada lagu, garisnya berwarna sesuai sampul album dan berdenyut pelan" />
+                                      Tag="Saat mengecil dan ada lagu, muncul gelombang kecil berwarna sampul yang bergoyang mengikuti beat" />
                             <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="TuckLyricsSwitch" Content="Lirik tetap tampil saat mengecil"
                                       Tag="Kalau lagunya punya lirik, notch tidak mengecil supaya liriknya tetap jalan" />

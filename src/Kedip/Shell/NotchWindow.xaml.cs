@@ -23,6 +23,7 @@ public partial class NotchWindow : Window
     // it opens only after a slightly longer hover, so sweeping across the tab strip doesn't pop it open.
     private static readonly TimeSpan TuckedHoverDelay = TimeSpan.FromMilliseconds(400);
     private const double TuckHeight = 4;
+    private const double TuckWaveHeight = 14;
     private static readonly TimeSpan LeaveDelay = TimeSpan.FromMilliseconds(400);
     private static readonly TimeSpan DefaultPeekDuration = TimeSpan.FromSeconds(3);
 
@@ -46,7 +47,7 @@ public partial class NotchWindow : Window
     private bool _isExpanded;
     private bool _isHidden;
     private bool _isTucked;
-    private SolidColorBrush? _musicLineBrush;
+    private readonly BeatWave _wave;
     private ImageSource? _musicLineArt;
     private bool _hoverPending;
     private bool _suppressHover;
@@ -61,8 +62,11 @@ public partial class NotchWindow : Window
 
         _collapsed = new CollapsedView();
         IslandSurface.SetStretch(_collapsed, true);
+        _wave = new BeatWave { Visibility = Visibility.Collapsed };
+        IslandSurface.SetStretch(_wave, true);
         _peekViews = [new PeekView(), new PeekView()];
         Surface.Children.Add(_collapsed);
+        Surface.Children.Add(_wave);
         Surface.Children.Add(_peekViews[0]);
         Surface.Children.Add(_peekViews[1]);
 
@@ -164,7 +168,9 @@ public partial class NotchWindow : Window
                 break;
             default:
                 double width = _collapsed.Apply(content, baseWidth, baseHeight, animate && previousMode == IslandMode.Collapsed);
-                target = _isTucked ? new Size(Math.Max(56, Math.Round(baseWidth * 0.42)), TuckHeight) : new Size(width, baseHeight);
+                target = !_isTucked ? new Size(width, baseHeight)
+                    : WantsMusicWave(content) ? new Size(Math.Max(100, Math.Round(baseWidth * 0.72)), TuckWaveHeight)
+                    : new Size(Math.Max(56, Math.Round(baseWidth * 0.42)), TuckHeight);
                 calm = previousMode == IslandMode.Collapsed && content.Centre == CentreContent.Lyric &&
                        _lastContent?.Centre == CentreContent.Lyric && _lastContent?.HasWings == content.HasWings;
                 break;
@@ -657,58 +663,36 @@ public partial class NotchWindow : Window
         mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted()
         && !(content.Centre == CentreContent.Lyric && _services.Settings.Current.TuckKeepsLyrics);
 
-    /// <summary>Tucked while a song plays: the thin line takes the album colour and breathes slowly.</summary>
+    private bool WantsMusicWave(CollapsedContent content) =>
+        _isTucked && !_isHidden && content.Left == LeftWing.Art && _services.Settings.Current.TuckMusicLine;
+
+    /// <summary>Tucked while a song plays: a small album-coloured wave in the pill that moves with the beat.</summary>
     private void UpdateMusicLine(CollapsedContent content)
     {
-        bool wanted = _isTucked && !_isHidden && content.Left == LeftWing.Art && _services.Settings.Current.TuckMusicLine;
-        if (!wanted)
+        if (!WantsMusicWave(content))
         {
             StopMusicLine();
             return;
         }
 
-        if (_musicLineBrush is not null && ReferenceEquals(_musicLineArt, content.Art))
+        if (!ReferenceEquals(_musicLineArt, content.Art) || _wave.Visibility != Visibility.Visible)
         {
-            return;
+            _musicLineArt = content.Art;
+            _wave.SetColor(ArtColor.Dominant(content.Art) ?? Color.FromRgb(0xF2, 0xF2, 0xF2));
         }
 
-        _musicLineArt = content.Art;
-        var color = ArtColor.Dominant(content.Art) ?? Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF);
-        if (_musicLineBrush is null)
+        _wave.Visibility = Visibility.Visible;
+        if (Animations)
         {
-            _musicLineBrush = new SolidColorBrush(color);
-            if (Animations)
-            {
-                var breathe = new System.Windows.Media.Animation.DoubleAnimation(1, 0.45, TimeSpan.FromMilliseconds(1400))
-                {
-                    AutoReverse = true,
-                    RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
-                    EasingFunction = new System.Windows.Media.Animation.SineEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut },
-                };
-                // A slow fade needs few frames; keeps the layered window cheap while music plays.
-                System.Windows.Media.Animation.Timeline.SetDesiredFrameRate(breathe, 15);
-                _musicLineBrush.BeginAnimation(Brush.OpacityProperty, breathe);
-            }
+            _wave.Start();
         }
-        else
-        {
-            _musicLineBrush.Color = color;
-        }
-
-        Surface.Fill = _musicLineBrush;
     }
 
     private void StopMusicLine()
     {
-        if (_musicLineBrush is null)
-        {
-            return;
-        }
-
-        _musicLineBrush.BeginAnimation(Brush.OpacityProperty, null);
-        _musicLineBrush = null;
+        _wave.Stop();
+        _wave.Visibility = Visibility.Collapsed;
         _musicLineArt = null;
-        Surface.Fill = (Brush)FindResource("NotchBrush");
     }
 
     private bool IsTuckWanted()
@@ -783,6 +767,7 @@ public partial class NotchWindow : Window
 
     private void OnClosed(object? sender, EventArgs e)
     {
+        _wave.Dispose();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         SystemEvents.TimeChanged -= OnSystemTimeChanged;
         _services.Settings.Changed -= OnSettingsChanged;
