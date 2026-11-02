@@ -1,5 +1,6 @@
 using System.Windows;
 using Kedip.Core;
+using Kedip.DockBar;
 using Kedip.Mascot;
 using Kedip.Media;
 using Kedip.Notifications;
@@ -16,6 +17,7 @@ public partial class App : Application
     private AppServices? _services;
     private NotchWindow? _notch;
     private TrayIcon? _tray;
+    private DockWindow? _dock;
     private SettingsWindow? _settingsWindow;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -69,8 +71,15 @@ public partial class App : Application
         };
         _services.StartAll();
 
+        // Do Not Disturb: no notification/water peeks and no sounds; prayer and power peeks still show (silently).
+        peeks.Filter = request => !settings.Current.DoNotDisturb || request.Kind is not (PeekKind.Notification or PeekKind.Water);
+        Chime.Muted = settings.Current.DoNotDisturb;
+        settings.Changed += (_, _) => Chime.Muted = settings.Current.DoNotDisturb;
+
         _notch = new NotchWindow(_services);
         _notch.Show();
+        ApplyShowMode();
+        settings.Changed += (_, _) => ApplyShowMode();
 
         _tray = new TrayIcon(_services, OpenSettings, () => Shutdown());
 
@@ -79,6 +88,28 @@ public partial class App : Application
 
         // Start-up allocates a lot that is never needed again.
         MemoryTrimmer.Request(TimeSpan.FromSeconds(20));
+    }
+
+    /// <summary>Creates or closes the dock to match "Notch saja / Dock saja / Keduanya" (the notch hides itself).</summary>
+    private void ApplyShowMode()
+    {
+        if (_services is null)
+        {
+            return;
+        }
+
+        bool wantDock = _services.Settings.Current.Show != ShowMode.NotchOnly;
+        if (wantDock && _dock is null)
+        {
+            _dock = new DockWindow(_services);
+            _dock.Show();
+        }
+        else if (!wantDock && _dock is not null)
+        {
+            _dock.Close();
+            _dock = null;
+            MemoryTrimmer.Request(TimeSpan.FromSeconds(2));
+        }
     }
 
     private void OpenSettings()
@@ -113,6 +144,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _tray?.Dispose();
+        _dock?.Close();
         _settingsWindow?.Close();
         _notch?.Close();
         if (_services is not null)

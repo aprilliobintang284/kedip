@@ -16,10 +16,13 @@ public static class Chime
     private static SoundPlayer? _player;
     private static bool _failed;
 
+    /// <summary>Silences every chime (Do Not Disturb).</summary>
+    public static bool Muted { get; set; }
+
     /// <summary>Call on the UI thread. Never blocks on playback.</summary>
     public static void Play()
     {
-        if (_failed)
+        if (_failed || Muted)
         {
             return;
         }

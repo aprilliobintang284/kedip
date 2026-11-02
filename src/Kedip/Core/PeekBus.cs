@@ -25,6 +25,15 @@ public sealed class PeekBus
 {
     public event EventHandler<PeekRequest>? Requested;
 
+    /// <summary>Returns false for peeks that must not show right now (Do Not Disturb).</summary>
+    public Func<PeekRequest, bool>? Filter { get; set; }
+
     /// <summary>Must be called on the UI thread.</summary>
-    public void Show(PeekRequest request) => Requested?.Invoke(this, request);
+    public void Show(PeekRequest request)
+    {
+        if (Filter?.Invoke(request) != false)
+        {
+            Requested?.Invoke(this, request);
+        }
+    }
 }

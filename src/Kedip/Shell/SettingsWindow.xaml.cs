@@ -54,6 +54,7 @@ public partial class SettingsWindow : Window
 
         SetUpNavigation();
         SetUpAppearance();
+        SetUpDock();
         SetUpMascot();
         SetUpMusic();
         SetUpNotifications();
@@ -79,6 +80,7 @@ public partial class SettingsWindow : Window
         _pages.AddRange(
         [
             (NavAppearance, PageAppearance),
+            (NavDock, PageDock),
             (NavMascot, PageMascot),
             (NavMusic, PageMusic),
             (NavNotifications, PageNotifications),
@@ -172,6 +174,30 @@ public partial class SettingsWindow : Window
         BindSwitch(FullscreenSwitch, s => s.HideInFullscreen, (s, v) => s.HideInFullscreen = v);
     }
 
+    private void SetUpDock()
+    {
+        _loaders.Add(s => ShowSegments.SelectedIndex = (int)s.Show);
+        ShowSegments.SelectionChanged += (_, _) =>
+        {
+            if (ShowSegments.SelectedIndex >= 0)
+            {
+                var mode = (ShowMode)ShowSegments.SelectedIndex;
+                Apply(s => s.Show = mode);
+            }
+        };
+
+        _loaders.Add(s => DockHideSegments.SelectedIndex = s.DockAutoHide == DockHide.Never ? 1 : 0);
+        DockHideSegments.SelectionChanged += (_, _) =>
+        {
+            var hide = DockHideSegments.SelectedIndex == 1 ? DockHide.Never : DockHide.Smart;
+            Apply(s => s.DockAutoHide = hide);
+        };
+
+        BindSwitch(DockTimerSwitch, s => s.DockTimer, (s, v) => s.DockTimer = v);
+        BindSwitch(DockWeatherSwitch, s => s.DockWeather, (s, v) => s.DockWeather = v);
+        BindSwitch(DockNetSwitch, s => s.DockNetSpeed, (s, v) => s.DockNetSpeed = v);
+    }
+
     private void SetUpMascot()
     {
         _loaders.Add(s => IdleStyleSegments.SelectedIndex = s.IdleStyle == IdleStyle.Clock ? 1 : 0);
@@ -205,6 +231,7 @@ public partial class SettingsWindow : Window
 
     private void SetUpNotifications()
     {
+        BindSwitch(DndSwitch, s => s.DoNotDisturb, (s, v) => s.DoNotDisturb = v);
         BindSwitch(NotificationsSwitch, s => s.NotificationsEnabled, (s, v) => s.NotificationsEnabled = v);
         BindSwitch(NotificationContentSwitch, s => s.NotificationShowContent, (s, v) => s.NotificationShowContent = v);
         BuildNotificationApps();

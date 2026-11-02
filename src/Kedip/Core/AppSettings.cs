@@ -12,6 +12,12 @@ public enum TuckMode { Off, Browser, AnyWindow }
 /// <summary>What a tucked notch shows while a song plays.</summary>
 public enum TuckMusicView { Line, Wave, Mini, MiniWave }
 
+/// <summary>Which parts of Kedip are on screen.</summary>
+public enum ShowMode { NotchOnly, DockOnly, Both }
+
+/// <summary>Smart: the dock slides away while a window covers it. Never: always visible.</summary>
+public enum DockHide { Smart, Never }
+
 /// <summary>User settings, persisted as JSON. Sizes are in DIPs.</summary>
 public sealed class AppSettings
 {
@@ -52,6 +58,21 @@ public sealed class AppSettings
 
     /// <summary>When LRCLIB has nothing, also search a second lyrics source.</summary>
     public bool LyricsExtraSources { get; set; } = true;
+
+    // Dock
+    public ShowMode Show { get; set; } = ShowMode.NotchOnly;
+    public DockHide DockAutoHide { get; set; } = DockHide.Smart;
+
+    /// <summary>"aumid:&lt;AppUserModelID&gt;" or "path:&lt;exe&gt;"; empty list = seed the defaults on first run.</summary>
+    public List<string> DockPinned { get; set; } = [];
+
+    public bool DockPinnedSeeded { get; set; }
+    public bool DockTimer { get; set; } = true;
+    public bool DockWeather { get; set; } = true;
+    public bool DockNetSpeed { get; set; } = true;
+
+    /// <summary>Do Not Disturb: no notification/water peeks and no sounds.</summary>
+    public bool DoNotDisturb { get; set; }
 
     // Notifications mirrored from Windows
     public bool NotificationsEnabled { get; set; } = true;

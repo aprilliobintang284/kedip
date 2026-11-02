@@ -1,10 +1,6 @@
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Kedip.Core;
+using Kedip.Interop;
 
 namespace Kedip.Notifications;
 
@@ -25,45 +21,11 @@ internal static partial class AppIdentity
             }
         }
 
-        string name = FallbackName(appId);
-        ImageSource? icon = null;
-        try
-        {
-            SHCreateItemFromParsingName(@"shell:AppsFolder\" + appId, IntPtr.Zero, typeof(IShellItem).GUID, out var item);
-            item.GetDisplayName(SIGDN_NORMALDISPLAY, out string display);
-            if (!string.IsNullOrWhiteSpace(display) && !display.Contains('!') && !display.Contains('_'))
-            {
-                name = display;
-            }
-
-            if (item is IShellItemImageFactory factory)
-            {
-                factory.GetImage(new SIZE { cx = 64, cy = 64 }, SIIGBF_ICONONLY | SIIGBF_BIGGERSIZEOK, out IntPtr hbitmap);
-                if (hbitmap != IntPtr.Zero)
-                {
-                    try
-                    {
-                        var source = Imaging.CreateBitmapSourceFromHBitmap(hbitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                        source.Freeze();
-                        icon = source;
-                    }
-                    finally
-                    {
-                        DeleteObject(hbitmap);
-                    }
-                }
-            }
-
-            Marshal.ReleaseComObject(item);
-        }
-        catch (Exception ex) when (ex is COMException or ArgumentException or InvalidCastException or System.IO.FileNotFoundException)
-        {
-            // Not in AppsFolder (system toasts, unregistered apps): keep the derived name.
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"App identity for {appId} failed: {ex.Message}");
-        }
+        string parsing = @"shell:AppsFolder\" + appId;
+        string? display = ShellItems.DisplayName(parsing);
+        // Unregistered ids come back as the raw id; keep the derived name then.
+        string name = display is not null && !display.Contains('!') && !display.Contains('_') ? display : FallbackName(appId);
+        ImageSource? icon = ShellItems.Image(parsing, 64);
 
         lock (Gate)
         {
@@ -98,46 +60,4 @@ internal static partial class AppIdentity
 
     [GeneratedRegex(@"(?<=[a-z])(?=[A-Z])")]
     private static partial Regex CamelBoundary();
-
-    private const uint SIGDN_NORMALDISPLAY = 0;
-    private const int SIIGBF_BIGGERSIZEOK = 0x1;
-    private const int SIIGBF_ICONONLY = 0x4;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct SIZE
-    {
-        public int cx;
-        public int cy;
-    }
-
-    [ComImport]
-    [Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IShellItem
-    {
-        void BindToHandler(IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid bhid, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IntPtr ppv);
-
-        void GetParent(out IShellItem ppsi);
-
-        void GetDisplayName(uint sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
-
-        void GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
-
-        void Compare(IShellItem psi, uint hint, out int piOrder);
-    }
-
-    [ComImport]
-    [Guid("bcc18b79-ba16-442f-80c4-8a59c30c463b")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IShellItemImageFactory
-    {
-        void GetImage(SIZE size, int flags, out IntPtr phbm);
-    }
-
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
-    private static extern void SHCreateItemFromParsingName(
-        string pszPath, IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IShellItem ppv);
-
-    [DllImport("gdi32.dll")]
-    private static extern bool DeleteObject(IntPtr hObject);
 }

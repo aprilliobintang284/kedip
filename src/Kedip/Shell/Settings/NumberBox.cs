@@ -35,8 +35,8 @@ public sealed class NumberBox : UserControl
         _suffix = new TextBlock { Margin = new Thickness(2, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center, FontSize = 12 };
         _suffix.SetResourceReference(TextBlock.ForegroundProperty, "STextSecondaryBrush");
 
-        var minus = CreateStepButton("", "Kurangi", -1);
-        var plus = CreateStepButton("", "Tambah", +1);
+        var minus = CreateStepButton("\uE738", "Kurangi", -1);
+        var plus = CreateStepButton("\uE710", "Tambah", +1);
 
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });

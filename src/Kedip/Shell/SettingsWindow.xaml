@@ -50,6 +50,7 @@
 
             <StackPanel x:Name="Nav" KeyboardNavigation.DirectionalNavigation="Cycle">
                 <RadioButton x:Name="NavAppearance" Style="{StaticResource SNavItem}" Tag="&#xE771;" Content="Tampilan" />
+                <RadioButton x:Name="NavDock" Style="{StaticResource SNavItem}" Tag="&#xE8A9;" Content="Dock" />
                 <RadioButton x:Name="NavMascot" Style="{StaticResource SNavItem}" Tag="&#xE890;" Content="Maskot" />
                 <RadioButton x:Name="NavMusic" Style="{StaticResource SNavItem}" Tag="&#xE8D6;" Content="Musik" />
                 <RadioButton x:Name="NavNotifications" Style="{StaticResource SNavItem}" Tag="&#xEA8F;" Content="Notifikasi" />
@@ -69,6 +70,13 @@
                 <StackPanel x:Name="PageAppearance" Style="{StaticResource SPage}">
                     <TextBlock Style="{StaticResource SPageTitle}" Text="Tampilan" />
                     <TextBlock Style="{StaticResource SPageSubtitle}" Text="Atur ukuran, posisi, dan gerak notch. Hasilnya langsung terlihat." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <s:SettingRow Header="Yang ditampilkan" Stacked="True"
+                                      Description="Pakai notch di atas, dock di bawah, atau keduanya sekaligus.">
+                            <s:SegmentedControl x:Name="ShowSegments" Segments="Notch|Dock|Keduanya" />
+                        </s:SettingRow>
+                    </Border>
 
                     <Border Style="{StaticResource SCard}" Padding="6">
                         <s:NotchPreview x:Name="Preview" Height="112" />
@@ -129,6 +137,37 @@
                                       Tag="Notch minggir dulu saat kamu nonton video atau main game" />
                         </StackPanel>
                     </Border>
+                </StackPanel>
+
+                <!-- Dock -->
+                <StackPanel x:Name="PageDock" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Dock" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" TextWrapping="Wrap"
+                               Text="Deretan app, widget, dan ikon status di bawah layar. Nyalakan lewat Tampilan &gt; Yang ditampilkan." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <s:SettingRow Header="Sembunyi otomatis" Stacked="True"
+                                          Description="Pintar: dock turun saat tertutup jendela, arahkan kursor ke garis di bawah untuk memunculkannya.">
+                                <s:SegmentedControl x:Name="DockHideSegments" Segments="Pintar|Selalu tampil" />
+                            </s:SettingRow>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Widget" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <CheckBox x:Name="DockTimerSwitch" Content="Timer" Tag="Klik untuk mulai atau jeda timer fokus" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="DockWeatherSwitch" Content="Cuaca"
+                                      Tag="Suhu di kotamu (dari pengaturan Sholat), lewat Open-Meteo" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="DockNetSwitch" Content="Kecepatan internet" Tag="Unduh dan unggah saat ini" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Margin="4,12,0,0" Style="{StaticResource SHint}" TextWrapping="Wrap"
+                               Text="Klik kanan ikon app di dock untuk menyematkan, melepas, atau menutupnya." />
                 </StackPanel>
 
                 <!-- Maskot -->
@@ -199,6 +238,9 @@
 
                     <Border Style="{StaticResource SCard}">
                         <StackPanel>
+                            <CheckBox x:Name="DndSwitch" Content="Jangan ganggu"
+                                      Tag="Notifikasi dan pengingat minum ditahan, semua suara Kedip dibisukan" />
+                            <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="NotificationsSwitch" Content="Tampilkan notifikasi di notch"
                                       Tag="Dibaca dari notifikasi Windows di PC ini, tidak dikirim ke mana pun" />
                             <Border Style="{StaticResource SDivider}" />

@@ -350,7 +350,7 @@ public sealed class NotificationService : IAppService
     {
         var s = _settings.Current;
         RememberApp(toast.AppId);
-        if (!s.NotificationsEnabled || s.NotificationMutedApps.Contains(toast.AppId, StringComparer.OrdinalIgnoreCase))
+        if (!s.NotificationsEnabled || s.DoNotDisturb || s.NotificationMutedApps.Contains(toast.AppId, StringComparer.OrdinalIgnoreCase))
         {
             return;
         }

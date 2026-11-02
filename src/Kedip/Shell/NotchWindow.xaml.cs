@@ -312,7 +312,8 @@ public partial class NotchWindow : Window
     }
 
     private bool IsHiddenWanted() =>
-        _services.Settings.Current.HideInFullscreen && _services.Foreground.IsFullscreenAppForeground;
+        _services.Settings.Current.Show == ShowMode.DockOnly
+        || (_services.Settings.Current.HideInFullscreen && _services.Foreground.IsFullscreenAppForeground);
 
     private void UpdateHidden()
     {
