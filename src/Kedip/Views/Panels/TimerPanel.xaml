@@ -1,0 +1,6 @@
+<UserControl x:Class="Kedip.Views.Panels.TimerPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- OWNER: E. Scaffold stub. Pomodoro + water. Area: 440x150 DIP on black. -->
+    <TextBlock Text="Timer" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource UiFont}" />
+</UserControl>

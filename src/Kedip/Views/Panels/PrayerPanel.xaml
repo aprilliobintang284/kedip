@@ -1,0 +1,6 @@
+<UserControl x:Class="Kedip.Views.Panels.PrayerPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- OWNER: D. Scaffold stub. Area: 440x150 DIP on black. -->
+    <TextBlock Text="Sholat" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource UiFont}" />
+</UserControl>

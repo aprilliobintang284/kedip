@@ -1,0 +1,7 @@
+<Window x:Class="Kedip.Shell.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pengaturan Kedip" Width="560" Height="640" WindowStartupLocation="CenterScreen">
+    <!-- OWNER: F. Scaffold stub. -->
+    <TextBlock Margin="16" Text="Pengaturan" />
+</Window>
