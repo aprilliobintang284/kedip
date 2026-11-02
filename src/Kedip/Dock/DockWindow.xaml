@@ -8,143 +8,17 @@
         FontFamily="{StaticResource UiFont}" Foreground="{StaticResource TextPrimaryBrush}"
         TextOptions.TextFormattingMode="Display" RenderOptions.ClearTypeHint="Enabled">
     <Window.Resources>
-        <SolidColorBrush x:Key="DockHover" Color="#1FFFFFFF" />
-        <SolidColorBrush x:Key="DockPress" Color="#12FFFFFF" />
-        <SolidColorBrush x:Key="DockLine" Color="#26FFFFFF" />
-        <SolidColorBrush x:Key="DockMenu" Color="#F2232326" />
-
-        <!-- Icon/tile button: rounded hover plate, slight press dip. -->
-        <Style x:Key="DockButton" TargetType="Button">
-            <Setter Property="Focusable" Value="False" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="Padding" Value="6,0" />
-            <Setter Property="MinWidth" Value="44" />
-            <Setter Property="Height" Value="50" />
-            <Setter Property="Margin" Value="1,0" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="Transparent">
-                            <Border x:Name="Plate" CornerRadius="11" Background="Transparent" Margin="0,3" />
-                            <ContentPresenter x:Name="Body" Margin="{TemplateBinding Padding}" HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
-                                <ContentPresenter.RenderTransform>
-                                    <ScaleTransform />
-                                </ContentPresenter.RenderTransform>
-                            </ContentPresenter>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Plate" Property="Background" Value="{StaticResource DockHover}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Plate" Property="Background" Value="{StaticResource DockPress}" />
-                                <Setter TargetName="Body" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <ScaleTransform ScaleX="0.93" ScaleY="0.93" />
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DockGlyph" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-
-        <Style x:Key="DockCaption" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10.5" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
-        </Style>
-
-        <Style x:Key="DockDivider" TargetType="Rectangle">
-            <Setter Property="Width" Value="1" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="Margin" Value="7,0" />
-            <Setter Property="Fill" Value="{StaticResource DockLine}" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-
-        <!-- Dark rounded context menu. -->
-        <Style TargetType="ContextMenu">
-            <Setter Property="HasDropShadow" Value="True" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{StaticResource DockMenu}" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="10"
-                                Padding="5" MinWidth="190" Margin="0,0,0,6">
-                            <ItemsPresenter />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="MenuItem">
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="MenuItem">
-                        <Border x:Name="Row" CornerRadius="6" Padding="10,7" Background="Transparent">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="24" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" FontFamily="{StaticResource IconFont}"
-                                           FontSize="13" VerticalAlignment="Center" Opacity="0.85" />
-                                <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" />
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="Row" Property="Background" Value="{StaticResource DockHover}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Row" Property="Opacity" Value="0.4" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="Separator">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Separator">
-                        <Border Height="1" Margin="8,4" Background="{StaticResource DockLine}" />
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style TargetType="ToolTip">
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToolTip">
-                        <Border Background="{StaticResource DockMenu}" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="7" Padding="9,5"
-                                Margin="0,0,0,8">
-                            <ContentPresenter TextBlock.FontSize="12" TextBlock.FontFamily="{StaticResource UiFont}" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Kedip;component/Dock/DockTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
 
     <!-- A faint tint on top of the system acrylic keeps icons readable on bright wallpapers. -->
     <Border x:Name="Root" Background="#66101012" Padding="8,0">
         <StackPanel Orientation="Horizontal" Height="62">
-            <Button x:Name="StartButton" Style="{StaticResource DockButton}" ToolTip="Start (klik kanan: menu cepat)">
+            <Button x:Name="StartButton" AutomationProperties.Name="Start" Style="{StaticResource DockButton}" ToolTip="Start (klik kanan: menu cepat)">
                 <Grid Width="16" Height="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
@@ -161,7 +35,7 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="TimerButton" Style="{StaticResource DockButton}" Padding="10,0" ToolTip="Klik: mulai / jeda timer fokus">
+            <Button x:Name="TimerButton" AutomationProperties.Name="Timer" Style="{StaticResource DockButton}" Padding="10,0" ToolTip="Klik: mulai / jeda timer fokus">
                 <StackPanel>
                     <TextBlock x:Name="TimerText" Text="--:--" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center"
                                Typography.NumeralAlignment="Tabular" />
@@ -175,16 +49,16 @@
             <StackPanel x:Name="RunningPanel" Orientation="Horizontal" />
             <Rectangle Style="{StaticResource DockDivider}" />
 
-            <Button x:Name="NetworkButton" Style="{StaticResource DockButton}" MinWidth="36">
+            <Button x:Name="NetworkButton" AutomationProperties.Name="Wi-Fi" Style="{StaticResource DockButton}" MinWidth="36">
                 <TextBlock x:Name="NetworkGlyph" Style="{StaticResource DockGlyph}" />
             </Button>
-            <Button x:Name="VolumeButton" Style="{StaticResource DockButton}" MinWidth="36">
+            <Button x:Name="VolumeButton" AutomationProperties.Name="Volume" Style="{StaticResource DockButton}" MinWidth="36">
                 <TextBlock x:Name="VolumeGlyph" Style="{StaticResource DockGlyph}" />
             </Button>
-            <Button x:Name="BatteryButton" Style="{StaticResource DockButton}" MinWidth="36">
+            <Button x:Name="BatteryButton" AutomationProperties.Name="Baterai" Style="{StaticResource DockButton}" MinWidth="36">
                 <TextBlock x:Name="BatteryGlyph" Style="{StaticResource DockGlyph}" FontSize="17" />
             </Button>
-            <Button x:Name="DndButton" Style="{StaticResource DockButton}" MinWidth="36">
+            <Button x:Name="DndButton" AutomationProperties.Name="Jangan ganggu" Style="{StaticResource DockButton}" MinWidth="36">
                 <TextBlock x:Name="DndGlyph" Style="{StaticResource DockGlyph}" FontSize="15" />
             </Button>
 
@@ -200,7 +74,7 @@
                            Typography.NumeralAlignment="Tabular" />
             </StackPanel>
 
-            <Button x:Name="ClockButton" Style="{StaticResource DockButton}" Padding="10,0">
+            <Button x:Name="ClockButton" AutomationProperties.Name="Jam" Style="{StaticResource DockButton}" Padding="10,0">
                 <StackPanel>
                     <TextBlock x:Name="ClockText" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Right"
                                Typography.NumeralAlignment="Tabular" />
@@ -208,7 +82,7 @@
                 </StackPanel>
             </Button>
 
-            <Button x:Name="DesktopButton" Style="{StaticResource DockButton}" MinWidth="36" ToolTip="Tampilkan desktop">
+            <Button x:Name="DesktopButton" AutomationProperties.Name="Desktop" Style="{StaticResource DockButton}" MinWidth="36" ToolTip="Tampilkan desktop">
                 <Border Width="16" Height="12" BorderBrush="White" BorderThickness="1.5" CornerRadius="2.5" Opacity="0.85" />
             </Button>
         </StackPanel>

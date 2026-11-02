@@ -131,6 +131,58 @@ internal static class ShellItems
         }
     }
 
+    /// <summary>Every entry of the shell's AppsFolder (what Start lists): display name and AppUserModelID.</summary>
+    public static List<(string Name, string AppId)> AppsFolder()
+    {
+        var apps = new List<(string, string)>();
+        var folder = Create("shell:AppsFolder");
+        if (folder is null)
+        {
+            return apps;
+        }
+
+        IEnumShellItems? items = null;
+        try
+        {
+            folder.BindToHandler(IntPtr.Zero, BHID_EnumItems, typeof(IEnumShellItems).GUID, out IntPtr pointer);
+            items = (IEnumShellItems)Marshal.GetObjectForIUnknown(pointer);
+            Marshal.Release(pointer);
+            while (items.Next(1, out IShellItem2? child, out uint fetched) == 0 && fetched == 1 && child is not null)
+            {
+                try
+                {
+                    child.GetDisplayName(SIGDN_NORMALDISPLAY, out string name);
+                    child.GetDisplayName(SIGDN_PARENTRELATIVEPARSING, out string id);
+                    if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(id))
+                    {
+                        apps.Add((name, id));
+                    }
+                }
+                catch (COMException)
+                {
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(child);
+                }
+            }
+        }
+        catch (Exception ex) when (ex is COMException or InvalidCastException)
+        {
+        }
+        finally
+        {
+            if (items is not null)
+            {
+                Marshal.ReleaseComObject(items);
+            }
+
+            Marshal.ReleaseComObject(folder);
+        }
+
+        return apps;
+    }
+
     /// <summary>Full exe path of a process, or null (works for elevated processes too).</summary>
     public static string? ProcessPath(uint processId)
     {
@@ -223,6 +275,17 @@ internal static class ShellItems
     }
 
     private const uint SIGDN_NORMALDISPLAY = 0;
+    private const uint SIGDN_PARENTRELATIVEPARSING = 0x80018001;
+    private static readonly Guid BHID_EnumItems = new("94F60519-2850-4924-AA5A-D15E84868039");
+
+    [ComImport]
+    [Guid("70629033-e363-4a28-a567-0db78006e6d7")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IEnumShellItems
+    {
+        [PreserveSig]
+        int Next(uint celt, [MarshalAs(UnmanagedType.Interface)] out IShellItem2? item, out uint fetched);
+    }
     private const int SIIGBF_BIGGERSIZEOK = 0x1;
     private const int SIIGBF_ICONONLY = 0x4;
     private const ushort VT_LPWSTR = 31;

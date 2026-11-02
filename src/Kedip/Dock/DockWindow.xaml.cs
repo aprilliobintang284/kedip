@@ -40,6 +40,7 @@ public partial class DockWindow : Window
     private bool _tucked;
     private bool _away;
     private bool _menuOpen;
+    private GlassPanel? _panel;
     private string _appsSignature = "";
 
     public DockWindow(AppServices services)
@@ -61,19 +62,19 @@ public partial class DockWindow : Window
         MouseEnter += (_, _) => Evaluate();
         Closed += OnClosed;
 
-        StartButton.Click += (_, _) => Keys.Win();
-        StartButton.MouseRightButtonUp += (_, e) =>
+        StartButton.Click += (_, _) => TogglePanel(() => new AppsPanelWindow(_services), alignRight: false);
+        StartButton.ContextMenu = QuickMenu.Start(this, () => _menuOpen = true, () =>
         {
-            e.Handled = true;
-            Keys.Win(Keys.X);
-        };
+            _menuOpen = false;
+            Evaluate();
+        });
         TimerButton.Click += (_, _) => ToggleTimer();
-        NetworkButton.Click += (_, _) => Keys.Win(Keys.A);
-        VolumeButton.Click += (_, _) => Keys.Win(Keys.A);
-        BatteryButton.Click += (_, _) => Keys.Win(Keys.A);
+        NetworkButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), alignRight: true);
+        VolumeButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), alignRight: true);
+        BatteryButton.Click += (_, _) => TogglePanel(() => new ControlPanelWindow(_services, _volume), alignRight: true);
         DndButton.Click += (_, _) => _services.Settings.Update(s => s.DoNotDisturb = !s.DoNotDisturb);
-        ClockButton.Click += (_, _) => Keys.Win(Keys.N);
-        DesktopButton.Click += (_, _) => Keys.Win(Keys.D);
+        ClockButton.Click += (_, _) => WinKeys.Win(WinKeys.N);
+        DesktopButton.Click += (_, _) => WinKeys.Win(WinKeys.D);
 
         _services.Settings.Changed += OnSettingsChanged;
         _services.Foreground.Changed += OnForegroundChanged;
@@ -95,25 +96,33 @@ public partial class DockWindow : Window
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         _hwnd = new WindowInteropHelper(this).Handle;
-        var source = HwndSource.FromHwnd(_hwnd);
-        source.CompositionTarget.BackgroundColor = Colors.Transparent;
-        source.AddHook(WndProc);
+        Glass.Apply(_hwnd, noActivate: true);
+        HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
+    }
 
-        long ex = NativeMethods.GetWindowLongPtr(_hwnd, NativeMethods.GWL_EXSTYLE).ToInt64();
-        NativeMethods.SetWindowLongPtr(_hwnd, NativeMethods.GWL_EXSTYLE,
-            new IntPtr(ex | NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_NOACTIVATE));
+    /// <summary>Opens a flyout above the dock (closing the other one), or closes it if it is already open.</summary>
+    private void TogglePanel<T>(Func<T> create, bool alignRight) where T : GlassPanel
+    {
+        if (_panel is T open && !open.IsClosing)
+        {
+            open.CloseSmooth();
+            return;
+        }
 
-        // Windows 11 acrylic behind the whole client area, dark, with system-rounded corners and a soft border.
-        int on = 1;
-        DwmSetWindowAttribute(_hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref on, sizeof(int));
-        int backdrop = DWMSBT_TRANSIENTWINDOW;
-        DwmSetWindowAttribute(_hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdrop, sizeof(int));
-        int corners = DWMWCP_ROUND;
-        DwmSetWindowAttribute(_hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref corners, sizeof(int));
-        int border = 0x00403B38; // COLORREF (BGR): a dim warm grey edge
-        DwmSetWindowAttribute(_hwnd, DWMWA_BORDER_COLOR, ref border, sizeof(int));
-        var margins = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };
-        DwmExtendFrameIntoClientArea(_hwnd, ref margins);
+        _panel?.CloseSmooth();
+        var panel = create();
+        _panel = panel;
+        _menuOpen = true;
+        panel.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_panel, panel))
+            {
+                _panel = null;
+                _menuOpen = false;
+                Evaluate();
+            }
+        };
+        panel.ShowAt(alignRight ? Left + ActualWidth : Left, ShownTop - 8, alignRight, Animations);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -530,57 +539,10 @@ public partial class DockWindow : Window
         return freezable;
     }
 
-    /// <summary>Windows-key shortcuts for the system surfaces the dock opens (until Kedip has its own).</summary>
-    private static class Keys
-    {
-        public const byte A = 0x41;
-        public const byte D = 0x44;
-        public const byte N = 0x4E;
-        public const byte X = 0x58;
-        private const byte LeftWin = 0x5B;
-        private const uint KeyUp = 0x0002;
-
-        public static void Win(byte? key = null)
-        {
-            keybd_event(LeftWin, 0, 0, UIntPtr.Zero);
-            if (key is { } k)
-            {
-                keybd_event(k, 0, 0, UIntPtr.Zero);
-                keybd_event(k, 0, KeyUp, UIntPtr.Zero);
-            }
-
-            keybd_event(LeftWin, 0, KeyUp, UIntPtr.Zero);
-        }
-
-        [DllImport("user32.dll")]
-        private static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extraInfo);
-    }
-
     private const int WM_MOUSEACTIVATE = 0x0021;
     private const int MA_NOACTIVATE = 3;
-    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-    private const int DWMWA_BORDER_COLOR = 34;
-    private const int DWMWA_SYSTEMBACKDROP_TYPE = 38;
     private const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
-    private const int DWMSBT_TRANSIENTWINDOW = 3;
-    private const int DWMWCP_ROUND = 2;
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MARGINS
-    {
-        public int Left;
-        public int Right;
-        public int Top;
-        public int Bottom;
-    }
-
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out NativeMethods.RECT value, int size);
-
-    [DllImport("dwmapi.dll")]
-    private static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS margins);
 }

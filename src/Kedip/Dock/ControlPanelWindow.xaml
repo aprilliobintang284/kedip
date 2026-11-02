@@ -1,0 +1,58 @@
+<local:GlassPanel x:Class="Kedip.DockBar.ControlPanelWindow"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:local="clr-namespace:Kedip.DockBar"
+                  Title="Kontrol cepat">
+    <Border Background="#66101012" Padding="14,12,14,14">
+        <StackPanel Width="366">
+            <Grid Margin="4,0,0,6">
+                <TextBlock Text="Kontrol cepat" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button x:Name="SettingsButton" Style="{StaticResource RoundIconButton}" HorizontalAlignment="Right"
+                        Content="&#xE713;" ToolTip="Semua pengaturan Windows" />
+            </Grid>
+
+            <WrapPanel x:Name="Tiles" Margin="-4,0" />
+
+            <Grid Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="42" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="MuteButton" Style="{StaticResource RoundIconButton}" Content="&#xE995;" ToolTip="Bisukan" />
+                <Slider x:Name="VolumeSlider" Grid.Column="1" Style="{StaticResource PanelSlider}" Margin="8,0" />
+                <TextBlock x:Name="VolumeValue" Grid.Column="2" FontSize="12.5" HorizontalAlignment="Right" VerticalAlignment="Center"
+                           Typography.NumeralAlignment="Tabular" />
+            </Grid>
+
+            <Grid x:Name="BrightnessRow" Margin="0,4,0,0" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="42" />
+                </Grid.ColumnDefinitions>
+                <Border Width="34" Height="34">
+                    <TextBlock FontFamily="{StaticResource IconFont}" FontSize="15" Text="&#xE706;" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Border>
+                <Slider x:Name="BrightnessSlider" Grid.Column="1" Style="{StaticResource PanelSlider}" Margin="8,0" />
+                <TextBlock x:Name="BrightnessValue" Grid.Column="2" FontSize="12.5" HorizontalAlignment="Right" VerticalAlignment="Center"
+                           Typography.NumeralAlignment="Tabular" />
+            </Grid>
+
+            <Border Height="1" Margin="4,14,4,10" Background="{StaticResource DockLine}" />
+
+            <Grid Margin="4,0,0,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="BatteryGlyph" FontFamily="{StaticResource IconFont}" FontSize="16" VerticalAlignment="Center" />
+                    <TextBlock x:Name="BatteryText" Margin="8,0,0,0" FontSize="12.5" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="WifiListButton" Style="{StaticResource RoundIconButton}" Content="&#xE701;" ToolTip="Pilih jaringan Wi-Fi" />
+                    <Button x:Name="BluetoothSettingsButton" Style="{StaticResource RoundIconButton}" Content="&#xE702;"
+                            ToolTip="Perangkat Bluetooth" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</local:GlassPanel>
