@@ -221,6 +221,7 @@ public sealed class ForegroundWatcher : IAppService
         IsFullscreenAppForeground = fullscreen;
         IsBrowserForeground = browser;
         IsTopEdgeForeground = topEdge;
+        Log.Info($"Foreground: desktop={desktop} fullscreen={fullscreen} browser={browser} topEdge={topEdge} class={NativeMethods.GetClassName(hwnd)}");
         OnChanged();
     }
 

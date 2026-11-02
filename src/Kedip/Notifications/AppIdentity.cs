@@ -56,7 +56,7 @@ internal static partial class AppIdentity
 
             Marshal.ReleaseComObject(item);
         }
-        catch (Exception ex) when (ex is COMException or ArgumentException or InvalidCastException)
+        catch (Exception ex) when (ex is COMException or ArgumentException or InvalidCastException or System.IO.FileNotFoundException)
         {
             // Not in AppsFolder (system toasts, unregistered apps): keep the derived name.
         }
