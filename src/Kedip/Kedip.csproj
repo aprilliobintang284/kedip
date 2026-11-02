@@ -21,6 +21,8 @@
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <TieredPGO>true</TieredPGO>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- WFO0003: DPI awareness is set in app.manifest on purpose (WPF app; WinForms only hosts the tray icon). -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
