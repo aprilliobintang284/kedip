@@ -47,6 +47,8 @@ public partial class NotchWindow : Window
     private bool _isExpanded;
     private bool _isHidden;
     private bool _isTucked;
+    private TuckLook _tuckLook;
+    private bool _revealing;
     private readonly BeatWave _wave;
     private ImageSource? _musicLineArt;
     private bool _hoverPending;
@@ -151,9 +153,10 @@ public partial class NotchWindow : Window
         var previousMode = _mode;
         _mode = mode;
         var content = CollapsedContent.From(_services);
-        _isTucked = ShouldTuck(mode, content);
-        Surface.EarRadius = _isTucked ? 2 : NotchShape.EarRadiusFor(baseHeight);
-        UpdateMusicLine(content);
+        _tuckLook = ComputeTuckLook(mode, content);
+        _isTucked = _tuckLook is TuckLook.Line or TuckLook.Wave;
+        Surface.EarRadius = _isTucked ? (_tuckLook == TuckLook.Wave ? 3 : 2) : NotchShape.EarRadiusFor(baseHeight);
+        UpdateMusicLine(content, baseHeight);
 
         Size target;
         bool calm = false;
@@ -167,10 +170,14 @@ public partial class NotchWindow : Window
                 target = _peekSize;
                 break;
             default:
-                double width = _collapsed.Apply(content, baseWidth, baseHeight, animate && previousMode == IslandMode.Collapsed);
-                target = !_isTucked ? new Size(width, baseHeight)
-                    : WantsMusicWave(content) ? new Size(Math.Max(100, Math.Round(baseWidth * 0.72)), TuckWaveHeight)
-                    : new Size(Math.Max(56, Math.Round(baseWidth * 0.42)), TuckHeight);
+                double width = _collapsed.Apply(content, baseWidth, baseHeight, animate && previousMode == IslandMode.Collapsed,
+                    hideCentre: _tuckLook == TuckLook.MiniWave);
+                target = _tuckLook switch
+                {
+                    TuckLook.Wave => new Size(Math.Max(100, Math.Round(baseWidth * 0.72)), TuckWaveHeight),
+                    TuckLook.Line => new Size(Math.Max(56, Math.Round(baseWidth * 0.42)), TuckHeight),
+                    _ => new Size(width, baseHeight),
+                };
                 calm = previousMode == IslandMode.Collapsed && content.Centre == CentreContent.Lyric &&
                        _lastContent?.Centre == CentreContent.Lyric && _lastContent?.HasWings == content.HasWings;
                 break;
@@ -216,7 +223,7 @@ public partial class NotchWindow : Window
             _expanded?.SetClock(_clock.Text);
         }
 
-        bool eyesShown = collapsed && content.Centre == CentreContent.Eyes;
+        bool eyesShown = collapsed && content.Centre == CentreContent.Eyes && _tuckLook != TuckLook.MiniWave;
         var eyes = _collapsed.Eyes;
         eyes.Mood = eyesShown ? _services.Mascot.Mood : MascotMood.Hidden;
         if (eyesShown)
@@ -448,12 +455,20 @@ public partial class NotchWindow : Window
     private void OnIslandMouseEnter(object sender, MouseEventArgs e)
     {
         _leaveTimer.Stop();
-        if (_isExpanded || _suppressHover || _isHidden)
+        if (_isExpanded || _suppressHover || _isHidden || _revealing)
         {
             return;
         }
 
-        _hoverTimer.Interval = _isTucked ? TuckedHoverDelay : HoverDelay;
+        if (_tuckLook != TuckLook.None && _services.Settings.Current.TuckClickToOpen)
+        {
+            // Tucked: hovering shows the mini notch and leaves it there; a click opens the full panel.
+            _revealing = true;
+            Refresh();
+            return;
+        }
+
+        _hoverTimer.Interval = _tuckLook != TuckLook.None ? TuckedHoverDelay : HoverDelay;
         _hoverPending = true;
         _hoverTimer.Stop();
         _hoverTimer.Start();
@@ -463,6 +478,15 @@ public partial class NotchWindow : Window
     private void OnIslandMouseLeave(object sender, MouseEventArgs e)
     {
         _suppressHover = false;
+        if (_revealing)
+        {
+            _revealing = false;
+            if (!_isExpanded)
+            {
+                Refresh();
+            }
+        }
+
         if (_hoverPending)
         {
             _hoverPending = false;
@@ -653,27 +677,57 @@ public partial class NotchWindow : Window
     {
         NotchPlacement.ReassertTopmost(_hwnd);
         UpdateHidden();
-        if (!_isHidden && _isTucked != ShouldTuck(_mode, CollapsedContent.From(_services)))
+        if (!_isHidden && _tuckLook != ComputeTuckLook(_mode, CollapsedContent.From(_services)))
         {
             Refresh();
         }
     }
 
-    private bool ShouldTuck(IslandMode mode, CollapsedContent content) =>
-        mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted()
-        && !(content.Centre == CentreContent.Lyric && _services.Settings.Current.TuckKeepsLyrics);
-
-    private bool WantsMusicWave(CollapsedContent content) =>
-        _isTucked && !_isHidden && content.Left == LeftWing.Art && _services.Settings.Current.TuckMusicLine;
-
-    /// <summary>Tucked while a song plays: a small album-coloured wave in the pill that moves with the beat.</summary>
-    private void UpdateMusicLine(CollapsedContent content)
+    /// <summary>How the collapsed island looks over a window whose top sits under the notch (see <see cref="TuckLook"/>).</summary>
+    private TuckLook ComputeTuckLook(IslandMode mode, CollapsedContent content)
     {
-        if (!WantsMusicWave(content))
+        var settings = _services.Settings.Current;
+        if (mode != IslandMode.Collapsed || _isHidden || !IsTuckWanted()
+            || (content.Centre == CentreContent.Lyric && settings.TuckKeepsLyrics))
+        {
+            return TuckLook.None;
+        }
+
+        // Under the cursor it is the regular mini notch (it opens on click or after a hover, per settings).
+        if (_revealing || _hoverPending || Surface.IsMouseOver)
+        {
+            return TuckLook.None;
+        }
+
+        if (content.Left != LeftWing.Art)
+        {
+            return TuckLook.Line;
+        }
+
+        return settings.TuckMusic switch
+        {
+            TuckMusicView.Wave => TuckLook.Wave,
+            TuckMusicView.Mini => TuckLook.Mini,
+            TuckMusicView.MiniWave => TuckLook.MiniWave,
+            _ => TuckLook.Line,
+        };
+    }
+
+    /// <summary>The beat wave: alone in the tucked pill, or in the mini notch's centre between the wings.</summary>
+    private void UpdateMusicLine(CollapsedContent content, double baseHeight)
+    {
+        bool wanted = !_isHidden && (_tuckLook is TuckLook.Wave or TuckLook.MiniWave) && content.Left == LeftWing.Art;
+        if (!wanted)
         {
             StopMusicLine();
             return;
         }
+
+        // In the mini notch the wave sits between the wings, which are as wide as the notch is tall.
+        bool inMini = _tuckLook == TuckLook.MiniWave;
+        double inset = inMini ? baseHeight + 2 : 0;
+        _wave.Margin = new Thickness(inset, 0, inset, 0);
+        _wave.MaxAmplitude = inMini ? 7 : double.PositiveInfinity;
 
         if (!ReferenceEquals(_musicLineArt, content.Art) || _wave.Visibility != Visibility.Visible)
         {

@@ -36,10 +36,13 @@ public partial class CollapsedView : UserControl
 
     public EyesControl Eyes { get; }
 
-    internal bool ShowsEyes => _shown?.Centre == CentreContent.Eyes;
+    internal bool ShowsEyes => !_centreHidden && _shown?.Centre == CentreContent.Eyes;
+
+    private bool _centreHidden;
 
     /// <summary>Shows <paramref name="content"/> (fading only what changed) and returns the body width it needs.</summary>
-    internal double Apply(CollapsedContent content, double baseWidth, double baseHeight, bool animate)
+    /// <param name="hideCentre">Keep only the wings (something else, e.g. the beat wave, is drawn in the centre).</param>
+    internal double Apply(CollapsedContent content, double baseWidth, double baseHeight, bool animate, bool hideCentre = false)
     {
         if (baseHeight != _metricsHeight)
         {
@@ -48,10 +51,12 @@ public partial class CollapsedView : UserControl
 
         var previous = _shown;
         _shown = content;
+        _centreHidden = hideCentre;
+        CentreContent? centre = hideCentre ? null : content.Centre;
 
-        Motion.FadeTo(ClockText, content.Centre == CentreContent.Clock, animate);
-        Motion.FadeTo(EyesHost, content.Centre == CentreContent.Eyes, animate);
-        if (content.Centre == CentreContent.Lyric)
+        Motion.FadeTo(ClockText, centre == CentreContent.Clock, animate);
+        Motion.FadeTo(EyesHost, centre == CentreContent.Eyes, animate);
+        if (centre == CentreContent.Lyric)
         {
             ShowLyric(content.Lyric ?? "", baseWidth, animate && previous is not null);
         }
@@ -73,7 +78,7 @@ public partial class CollapsedView : UserControl
         Motion.FadeTo(BatteryText, content.Right == RightWing.Battery, animate);
 
         double wings = content.HasWings ? 2 * _wing : 0;
-        if (content.Centre == CentreContent.Lyric)
+        if (centre == CentreContent.Lyric)
         {
             return Math.Clamp(_lyricWidth + 2 * _lyricPad + wings, baseWidth + wings, Math.Max(MaxLyricWidth, baseWidth + wings));
         }

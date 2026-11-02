@@ -9,6 +9,9 @@ public enum IdleStyle { Eyes, Clock }
 /// <summary>When the notch tucks itself into a thin line so the window under it (e.g. browser tabs) can be used.</summary>
 public enum TuckMode { Off, Browser, AnyWindow }
 
+/// <summary>What a tucked notch shows while a song plays.</summary>
+public enum TuckMusicView { Line, Wave, Mini, MiniWave }
+
 /// <summary>User settings, persisted as JSON. Sizes are in DIPs.</summary>
 public sealed class AppSettings
 {
@@ -23,8 +26,11 @@ public sealed class AppSettings
     /// <summary>Tuck into a thin line over a maximized browser (or any window) whose top sits under the notch.</summary>
     public TuckMode Tuck { get; set; } = TuckMode.Browser;
 
-    /// <summary>While tucked and a song plays, the line takes the album colour and pulses gently.</summary>
-    public bool TuckMusicLine { get; set; } = true;
+    /// <summary>While tucked and a song plays: plain line, beat wave, the mini notch, or the mini notch with the wave in its centre.</summary>
+    public TuckMusicView TuckMusic { get; set; } = TuckMusicView.Wave;
+
+    /// <summary>While tucked, hovering only reveals the mini notch; a click opens the full panel.</summary>
+    public bool TuckClickToOpen { get; set; } = true;
 
     /// <summary>Don't tuck while a synced lyric line is showing.</summary>
     public bool TuckKeepsLyrics { get; set; } = true;

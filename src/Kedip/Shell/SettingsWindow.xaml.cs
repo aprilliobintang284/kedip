@@ -156,7 +156,16 @@ public partial class SettingsWindow : Window
             };
             Apply(s => s.Tuck = tuck);
         };
-        BindSwitch(TuckMusicLineSwitch, s => s.TuckMusicLine, (s, v) => s.TuckMusicLine = v);
+        _loaders.Add(s => TuckMusicSegments.SelectedIndex = (int)s.TuckMusic);
+        TuckMusicSegments.SelectionChanged += (_, _) =>
+        {
+            if (TuckMusicSegments.SelectedIndex >= 0)
+            {
+                var view = (TuckMusicView)TuckMusicSegments.SelectedIndex;
+                Apply(s => s.TuckMusic = view);
+            }
+        };
+        BindSwitch(TuckClickSwitch, s => s.TuckClickToOpen, (s, v) => s.TuckClickToOpen = v);
         BindSwitch(TuckLyricsSwitch, s => s.TuckKeepsLyrics, (s, v) => s.TuckKeepsLyrics = v);
 
         BindSwitch(AnimationsSwitch, s => s.Animations, (s, v) => s.Animations = v);
@@ -437,7 +446,8 @@ public partial class SettingsWindow : Window
         LyricsInNotchSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
         LyricsExtraSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
         NotificationContentSwitch.IsEnabled = s.NotificationsEnabled;
-        TuckMusicLineSwitch.IsEnabled = s.Tuck != TuckMode.Off;
+        TuckMusicSegments.IsEnabled = s.Tuck != TuckMode.Off;
+        TuckClickSwitch.IsEnabled = s.Tuck != TuckMode.Off;
         TuckLyricsSwitch.IsEnabled = s.Tuck != TuckMode.Off;
         NotificationAppsPanel.IsEnabled = s.NotificationsEnabled;
 

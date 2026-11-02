@@ -34,6 +34,9 @@ internal sealed class BeatWave : FrameworkElement, IDisposable
 
     public bool IsRunning => _timer.IsEnabled;
 
+    /// <summary>Largest swing from the centre line in DIPs (the wave also never leaves the control).</summary>
+    public double MaxAmplitude { get; set; } = double.PositiveInfinity;
+
     public void SetColor(Color color)
     {
         if (_main is not null && color == _color)
@@ -100,7 +103,7 @@ internal sealed class BeatWave : FrameworkElement, IDisposable
 
         double pad = Math.Min(10, w * 0.08);
         double mid = h / 2;
-        double amp = (h / 2 - 1.4) * Math.Clamp(0.18 + 0.78 * _level + 0.65 * _kick, 0, 1);
+        double amp = Math.Min(h / 2 - 1.4, MaxAmplitude) * Math.Clamp(0.18 + 0.78 * _level + 0.65 * _kick, 0, 1);
         dc.DrawGeometry(null, _echo, Wave(pad, w - pad, mid, amp * 0.65, 1.6, _phase * 0.7 + 1.9));
         dc.DrawGeometry(null, _main, Wave(pad, w - pad, mid, amp, 2.3, _phase));
     }

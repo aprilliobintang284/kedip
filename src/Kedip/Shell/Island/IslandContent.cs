@@ -9,6 +9,12 @@ internal enum IslandTab { Music, Prayer, Timer, Shelf }
 
 internal enum CentreContent { Clock, Eyes, Lyric }
 
+/// <summary>
+/// The collapsed island over a window whose top sits under the notch: regular (None), a thin Line, the beat Wave pill,
+/// the regular Mini notch, or the mini notch with the wave in its centre (MiniWave).
+/// </summary>
+internal enum TuckLook { None, Line, Wave, Mini, MiniWave }
+
 internal enum LeftWing { None, Art, Bolt }
 
 internal enum RightWing { None, Equalizer, Battery }

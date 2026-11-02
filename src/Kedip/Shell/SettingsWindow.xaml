@@ -111,8 +111,13 @@
                                 <s:SegmentedControl x:Name="TuckSegments" Segments="Mati|Browser|Semua" />
                             </s:SettingRow>
                             <Border Style="{StaticResource SDivider}" />
-                            <CheckBox x:Name="TuckMusicLineSwitch" Content="Garis musik"
-                                      Tag="Saat mengecil dan ada lagu, muncul gelombang kecil berwarna sampul yang bergoyang mengikuti beat" />
+                            <s:SettingRow Header="Saat ada lagu"
+                                          Description="Tampilan notch yang mengecil selama lagu diputar. Gelombang bergoyang mengikuti beat.">
+                                <s:SegmentedControl x:Name="TuckMusicSegments" Segments="Garis|Gelombang|Mini|Keduanya" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="TuckClickSwitch" Content="Klik untuk membuka"
+                                      Tag="Arahkan kursor untuk memunculkan notch mini; panel penuh baru terbuka saat diklik" />
                             <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="TuckLyricsSwitch" Content="Lirik tetap tampil saat mengecil"
                                       Tag="Kalau lagunya punya lirik, notch tidak mengecil supaya liriknya tetap jalan" />
