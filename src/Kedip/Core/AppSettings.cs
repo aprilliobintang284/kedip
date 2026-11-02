@@ -22,6 +22,12 @@ public sealed class AppSettings
 
     /// <summary>Tuck into a thin line over a maximized browser (or any window) whose top sits under the notch.</summary>
     public TuckMode Tuck { get; set; } = TuckMode.Browser;
+
+    /// <summary>While tucked and a song plays, the line takes the album colour and pulses gently.</summary>
+    public bool TuckMusicLine { get; set; } = true;
+
+    /// <summary>Don't tuck while a synced lyric line is showing.</summary>
+    public bool TuckKeepsLyrics { get; set; } = true;
     // Off by default so development builds never register themselves; enabled when installed.
     public bool StartWithWindows { get; set; }
 

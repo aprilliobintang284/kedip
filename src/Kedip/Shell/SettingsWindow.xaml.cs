@@ -156,6 +156,8 @@ public partial class SettingsWindow : Window
             };
             Apply(s => s.Tuck = tuck);
         };
+        BindSwitch(TuckMusicLineSwitch, s => s.TuckMusicLine, (s, v) => s.TuckMusicLine = v);
+        BindSwitch(TuckLyricsSwitch, s => s.TuckKeepsLyrics, (s, v) => s.TuckKeepsLyrics = v);
 
         BindSwitch(AnimationsSwitch, s => s.Animations, (s, v) => s.Animations = v);
         BindSwitch(FullscreenSwitch, s => s.HideInFullscreen, (s, v) => s.HideInFullscreen = v);
@@ -435,6 +437,8 @@ public partial class SettingsWindow : Window
         LyricsInNotchSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
         LyricsExtraSwitch.IsEnabled = s.MusicEnabled && s.LyricsEnabled;
         NotificationContentSwitch.IsEnabled = s.NotificationsEnabled;
+        TuckMusicLineSwitch.IsEnabled = s.Tuck != TuckMode.Off;
+        TuckLyricsSwitch.IsEnabled = s.Tuck != TuckMode.Off;
         NotificationAppsPanel.IsEnabled = s.NotificationsEnabled;
 
         bool custom = FindCity(s.PrayerCity) < 0;

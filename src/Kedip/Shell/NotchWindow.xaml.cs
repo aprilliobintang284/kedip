@@ -46,6 +46,8 @@ public partial class NotchWindow : Window
     private bool _isExpanded;
     private bool _isHidden;
     private bool _isTucked;
+    private SolidColorBrush? _musicLineBrush;
+    private ImageSource? _musicLineArt;
     private bool _hoverPending;
     private bool _suppressHover;
     private bool _dragInside;
@@ -144,10 +146,11 @@ public partial class NotchWindow : Window
         var mode = _isExpanded ? IslandMode.Expanded : _currentPeek is not null ? IslandMode.Peek : IslandMode.Collapsed;
         var previousMode = _mode;
         _mode = mode;
-        _isTucked = mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted();
-        Surface.EarRadius = _isTucked ? 2 : NotchShape.EarRadiusFor(baseHeight);
-
         var content = CollapsedContent.From(_services);
+        _isTucked = ShouldTuck(mode, content);
+        Surface.EarRadius = _isTucked ? 2 : NotchShape.EarRadiusFor(baseHeight);
+        UpdateMusicLine(content);
+
         Size target;
         bool calm = false;
         switch (mode)
@@ -314,6 +317,7 @@ public partial class NotchWindow : Window
             _isExpanded = false;
             _expanded?.Close(animate: false);
             _clock.SetRunning(false);
+            StopMusicLine();
             Motion.To(Surface, OpacityProperty, 0, TimeSpan.FromMilliseconds(140), Motion.Decelerate, Animations && IsVisible,
                 completed: (_, _) =>
                 {
@@ -643,10 +647,68 @@ public partial class NotchWindow : Window
     {
         NotchPlacement.ReassertTopmost(_hwnd);
         UpdateHidden();
-        if (!_isHidden && _isTucked != (_mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted()))
+        if (!_isHidden && _isTucked != ShouldTuck(_mode, CollapsedContent.From(_services)))
         {
             Refresh();
         }
+    }
+
+    private bool ShouldTuck(IslandMode mode, CollapsedContent content) =>
+        mode == IslandMode.Collapsed && !_hoverPending && !Surface.IsMouseOver && IsTuckWanted()
+        && !(content.Centre == CentreContent.Lyric && _services.Settings.Current.TuckKeepsLyrics);
+
+    /// <summary>Tucked while a song plays: the thin line takes the album colour and breathes slowly.</summary>
+    private void UpdateMusicLine(CollapsedContent content)
+    {
+        bool wanted = _isTucked && !_isHidden && content.Left == LeftWing.Art && _services.Settings.Current.TuckMusicLine;
+        if (!wanted)
+        {
+            StopMusicLine();
+            return;
+        }
+
+        if (_musicLineBrush is not null && ReferenceEquals(_musicLineArt, content.Art))
+        {
+            return;
+        }
+
+        _musicLineArt = content.Art;
+        var color = ArtColor.Dominant(content.Art) ?? Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF);
+        if (_musicLineBrush is null)
+        {
+            _musicLineBrush = new SolidColorBrush(color);
+            if (Animations)
+            {
+                var breathe = new System.Windows.Media.Animation.DoubleAnimation(1, 0.45, TimeSpan.FromMilliseconds(1400))
+                {
+                    AutoReverse = true,
+                    RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+                    EasingFunction = new System.Windows.Media.Animation.SineEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut },
+                };
+                // A slow fade needs few frames; keeps the layered window cheap while music plays.
+                System.Windows.Media.Animation.Timeline.SetDesiredFrameRate(breathe, 15);
+                _musicLineBrush.BeginAnimation(Brush.OpacityProperty, breathe);
+            }
+        }
+        else
+        {
+            _musicLineBrush.Color = color;
+        }
+
+        Surface.Fill = _musicLineBrush;
+    }
+
+    private void StopMusicLine()
+    {
+        if (_musicLineBrush is null)
+        {
+            return;
+        }
+
+        _musicLineBrush.BeginAnimation(Brush.OpacityProperty, null);
+        _musicLineBrush = null;
+        _musicLineArt = null;
+        Surface.Fill = (Brush)FindResource("NotchBrush");
     }
 
     private bool IsTuckWanted()

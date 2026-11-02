@@ -111,6 +111,12 @@
                                 <s:SegmentedControl x:Name="TuckSegments" Segments="Mati|Browser|Semua" />
                             </s:SettingRow>
                             <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="TuckMusicLineSwitch" Content="Garis musik"
+                                      Tag="Saat mengecil dan ada lagu, garisnya berwarna sesuai sampul album dan berdenyut pelan" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="TuckLyricsSwitch" Content="Lirik tetap tampil saat mengecil"
+                                      Tag="Kalau lagunya punya lirik, notch tidak mengecil supaya liriknya tetap jalan" />
+                            <Border Style="{StaticResource SDivider}" />
                             <CheckBox x:Name="AnimationsSwitch" Content="Animasi"
                                       Tag="Gerak halus saat notch membuka dan menutup" />
                             <Border Style="{StaticResource SDivider}" />
