@@ -193,6 +193,7 @@ public partial class SettingsWindow : Window
             Apply(s => s.DockAutoHide = hide);
         };
 
+        BindSwitch(ReplaceTaskbarSwitch, s => s.DockReplaceTaskbar, (s, v) => s.DockReplaceTaskbar = v);
         BindSwitch(DockTimerSwitch, s => s.DockTimer, (s, v) => s.DockTimer = v);
         BindSwitch(DockWeatherSwitch, s => s.DockWeather, (s, v) => s.DockWeather = v);
         BindSwitch(DockNetSwitch, s => s.DockNetSpeed, (s, v) => s.DockNetSpeed = v);

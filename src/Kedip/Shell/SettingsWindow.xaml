@@ -151,6 +151,9 @@
                                           Description="Pintar: dock turun saat tertutup jendela, arahkan kursor ke garis di bawah untuk memunculkannya.">
                                 <s:SegmentedControl x:Name="DockHideSegments" Segments="Pintar|Selalu tampil" />
                             </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="ReplaceTaskbarSwitch" Content="Gantikan taskbar Windows"
+                                      Tag="Taskbar Windows disembunyikan dan dock jadi taskbar utama. Tombol ⌃ di dock memunculkannya lagi (untuk ikon tray). Dengan &quot;Selalu tampil&quot;, jendela yang dimaksimalkan berhenti di atas dock." />
                         </StackPanel>
                     </Border>
 

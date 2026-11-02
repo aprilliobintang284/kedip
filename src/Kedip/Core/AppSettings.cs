@@ -63,6 +63,9 @@ public sealed class AppSettings
     public ShowMode Show { get; set; } = ShowMode.NotchOnly;
     public DockHide DockAutoHide { get; set; } = DockHide.Smart;
 
+    /// <summary>Hide the Windows taskbar and use the dock instead (a dock button brings the taskbar back on demand).</summary>
+    public bool DockReplaceTaskbar { get; set; }
+
     /// <summary>"aumid:&lt;AppUserModelID&gt;" or "path:&lt;exe&gt;"; empty list = seed the defaults on first run.</summary>
     public List<string> DockPinned { get; set; } = [];
 

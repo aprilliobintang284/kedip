@@ -6,6 +6,7 @@ namespace Kedip.DockBar;
 internal static class WinKeys
 {
     public const byte A = 0x41;
+    public const byte B = 0x42;
     public const byte D = 0x44;
     public const byte N = 0x4E;
     public const byte P = 0x50;

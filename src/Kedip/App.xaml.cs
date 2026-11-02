@@ -40,7 +40,15 @@ public partial class App : Application
             args.Handled = true;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
             Log.Error("Unhandled exception", args.ExceptionObject as Exception);
+            // Never leave the user without a taskbar.
+            if (TaskbarControl.IsHiddenByKedip)
+            {
+                TaskbarControl.Show();
+            }
+        };
+        TaskbarControl.RestoreIfLeftHidden();
         TaskScheduler.UnobservedTaskException += (_, args) =>
         {
             Log.Error("Unobserved task exception", args.Exception);

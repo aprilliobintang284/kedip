@@ -41,6 +41,9 @@ public partial class DockWindow : Window
     private bool _away;
     private bool _menuOpen;
     private GlassPanel? _panel;
+    private AppBar? _appBar;
+    private uint _taskbarCreatedMessage;
+    private bool _taskbarPeek;
     private string _appsSignature = "";
 
     public DockWindow(AppServices services)
@@ -58,7 +61,15 @@ public partial class DockWindow : Window
 
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
-        SizeChanged += (_, _) => Place(animate: false);
+        SizeChanged += (_, e) =>
+        {
+            Place(animate: false);
+            if (e.HeightChanged && _services.Settings.Current.DockReplaceTaskbar)
+            {
+                // The reserved strip follows the dock's real height (unknown until the first layout).
+                ApplyTaskbarMode();
+            }
+        };
         MouseEnter += (_, _) => Evaluate();
         Closed += OnClosed;
 
@@ -75,6 +86,7 @@ public partial class DockWindow : Window
         DndButton.Click += (_, _) => _services.Settings.Update(s => s.DoNotDisturb = !s.DoNotDisturb);
         ClockButton.Click += (_, _) => WinKeys.Win(WinKeys.N);
         DesktopButton.Click += (_, _) => WinKeys.Win(WinKeys.D);
+        TaskbarButton.Click += (_, _) => ToggleTaskbarPeek();
 
         _services.Settings.Changed += OnSettingsChanged;
         _services.Foreground.Changed += OnForegroundChanged;
@@ -89,7 +101,21 @@ public partial class DockWindow : Window
 
     private static double ScreenHeight => SystemParameters.PrimaryScreenHeight;
 
-    private double ShownTop => ScreenHeight - ActualHeight - BottomGap;
+    /// <summary>Where the dock sits when shown: above the screen edge, or above the Windows taskbar while it is peeked.</summary>
+    private double ShownTop
+    {
+        get
+        {
+            double bottom = ScreenHeight;
+            if (_taskbarPeek && TaskbarControl.VisibleRect is { } taskbar)
+            {
+                var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+                bottom = Math.Min(bottom, taskbar.Top / toDevice.M22);
+            }
+
+            return bottom - ActualHeight - BottomGap;
+        }
+    }
 
     // ---- Setup -------------------------------------------------------------------------------------------------
 
@@ -98,6 +124,84 @@ public partial class DockWindow : Window
         _hwnd = new WindowInteropHelper(this).Handle;
         Glass.Apply(_hwnd, noActivate: true);
         HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
+        _appBar = new AppBar(_hwnd);
+        _taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
+    }
+
+    // ---- "Gantikan taskbar" --------------------------------------------------------------------------------------
+
+    /// <summary>Hides or restores the Windows taskbar and reserves screen space when the dock is always shown.</summary>
+    private void ApplyTaskbarMode()
+    {
+        var s = _services.Settings.Current;
+        bool replace = s.DockReplaceTaskbar;
+        TaskbarButton.Visibility = replace ? Visibility.Visible : Visibility.Collapsed;
+        if (!replace)
+        {
+            _taskbarPeek = false;
+            if (TaskbarControl.IsHiddenByKedip)
+            {
+                TaskbarControl.Show();
+            }
+        }
+        else if (!_taskbarPeek)
+        {
+            TaskbarControl.Hide();
+        }
+
+        if (replace && s.DockAutoHide == DockHide.Never && _appBar is not null && ActualHeight > 0)
+        {
+            var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+            _appBar.Reserve((int)Math.Ceiling((ActualHeight + 2 * BottomGap) * toDevice.M22));
+        }
+        else
+        {
+            _appBar?.Release();
+        }
+
+        TaskbarGlyph.Text = WinKeys.Glyph(_taskbarPeek ? 0xE70D : 0xE70E);
+        TaskbarButton.ToolTip = _taskbarPeek ? "Sembunyikan taskbar Windows" : "Tampilkan taskbar Windows (ikon tray)";
+    }
+
+    private async void ToggleTaskbarPeek()
+    {
+        _taskbarPeek = !_taskbarPeek;
+        if (_taskbarPeek)
+        {
+            TaskbarControl.Show();
+            if (AppBar.TaskbarAutoHides())
+            {
+                // An auto-hide taskbar comes back slid away; Win+B reveals it with the tray (hidden icons) focused.
+                WinKeys.Win(WinKeys.B);
+            }
+        }
+        else
+        {
+            TaskbarControl.Hide();
+        }
+
+        ApplyTaskbarMode();
+        Place(animate: true);
+        // The taskbar slides in over a few hundred ms; settle above its final position.
+        await Task.Delay(350);
+        Place(animate: true);
+    }
+
+    /// <summary>Explorer re-shows its taskbar now and then (Start, restarts); hide it again unless a shell flyout is open.</summary>
+    private void EnforceTaskbar()
+    {
+        if (!_services.Settings.Current.DockReplaceTaskbar || _taskbarPeek || !TaskbarControl.IsVisible)
+        {
+            return;
+        }
+
+        string cls = NativeMethods.GetClassName(NativeMethods.GetForegroundWindow());
+        if (cls is "Windows.UI.Core.CoreWindow" or "Xaml_WindowedPopupClass" || Kedip.Mascot.ForegroundWatcher.IsShellClass(cls))
+        {
+            return;
+        }
+
+        TaskbarControl.Hide();
     }
 
     /// <summary>Opens a flyout above the dock (closing the other one), or closes it if it is already open.</summary>
@@ -136,6 +240,7 @@ public partial class DockWindow : Window
         _appsSignature = "";
         LiveTick();
         Place(animate: false);
+        ApplyTaskbarMode();
         _checkTimer.Start();
         Evaluate();
         UpdateLiveTimer();
@@ -152,6 +257,11 @@ public partial class DockWindow : Window
         _services.Pomodoro.Changed -= OnPomodoroChanged;
         _weather.Updated -= OnWeatherUpdated;
         _volume.Dispose();
+        _appBar?.Release();
+        if (TaskbarControl.IsHiddenByKedip)
+        {
+            TaskbarControl.Show();
+        }
     }
 
     private void SeedPins()
@@ -187,6 +297,7 @@ public partial class DockWindow : Window
 
     private void Evaluate()
     {
+        EnforceTaskbar();
         var s = _services.Settings.Current;
         bool away = s.HideInFullscreen && _services.Foreground.IsFullscreenAppForeground;
         bool tucked = !away && s.DockAutoHide == DockHide.Smart && !IsMouseOver && !_menuOpen && ForegroundCovers();
@@ -487,6 +598,7 @@ public partial class DockWindow : Window
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
+        ApplyTaskbarMode();
         ApplyWidgetVisibility();
         UpdateDnd();
         RefreshWeather();
@@ -530,6 +642,16 @@ public partial class DockWindow : Window
             return new IntPtr(MA_NOACTIVATE);
         }
 
+        if (_appBar is not null && msg == _appBar.CallbackMessage && wParam.ToInt32() == AppBar.ABN_POSCHANGED)
+        {
+            _appBar.Reposition();
+        }
+        else if (_taskbarCreatedMessage != 0 && msg == _taskbarCreatedMessage)
+        {
+            // Explorer restarted and brought a fresh taskbar.
+            Dispatcher.InvokeAsync(ApplyTaskbarMode);
+        }
+
         return IntPtr.Zero;
     }
 
@@ -545,4 +667,7 @@ public partial class DockWindow : Window
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out NativeMethods.RECT value, int size);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint RegisterWindowMessage(string name);
 }

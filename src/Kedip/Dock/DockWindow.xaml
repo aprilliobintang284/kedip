@@ -49,6 +49,10 @@
             <StackPanel x:Name="RunningPanel" Orientation="Horizontal" />
             <Rectangle Style="{StaticResource DockDivider}" />
 
+            <Button x:Name="TaskbarButton" AutomationProperties.Name="Taskbar" Style="{StaticResource DockButton}" MinWidth="30"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="TaskbarGlyph" Style="{StaticResource DockGlyph}" FontSize="12" Text="&#xE70E;" />
+            </Button>
             <Button x:Name="NetworkButton" AutomationProperties.Name="Wi-Fi" Style="{StaticResource DockButton}" MinWidth="36">
                 <TextBlock x:Name="NetworkGlyph" Style="{StaticResource DockGlyph}" />
             </Button>

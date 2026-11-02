@@ -214,7 +214,12 @@ internal sealed class DockApps
             }
 
             var (name, icon) = AppIdentity.Get(id);
-            return (fallbackName is not null && name == AppIdentity.FallbackName(id) ? fallbackName : name, icon, ShellItems.TargetPath(parsing));
+            // File Explorer's Start entry is a shell item, not a link; its windows run from explorer.exe.
+            string? exe = ShellItems.TargetPath(parsing)
+                ?? (string.Equals(id, "Microsoft.Windows.Explorer", StringComparison.OrdinalIgnoreCase)
+                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe")
+                    : null);
+            return (fallbackName is not null && name == AppIdentity.FallbackName(id) ? fallbackName : name, icon, exe);
         }
 
         string path = key.StartsWith("path:", StringComparison.Ordinal) ? key[5..] : key;
