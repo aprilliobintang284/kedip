@@ -1,7 +1,357 @@
 <Window x:Class="Kedip.Shell.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Pengaturan Kedip" Width="560" Height="640" WindowStartupLocation="CenterScreen">
-    <!-- OWNER: F. Scaffold stub. -->
-    <TextBlock Margin="16" Text="Pengaturan" />
+        xmlns:s="clr-namespace:Kedip.Shell.Settings"
+        Title="Pengaturan Kedip" Width="720" Height="640" MinWidth="640" MinHeight="480"
+        WindowStartupLocation="CenterScreen" Icon="/Kedip;component/Assets/kedip.ico"
+        Background="{DynamicResource SWindowBrush}" Foreground="{DynamicResource STextBrush}"
+        FontFamily="{DynamicResource SUiFont}" FontSize="13"
+        UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Kedip;component/Shell/Settings/SettingsTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource SSwitchRow}" />
+            <Style TargetType="ComboBox" BasedOn="{StaticResource SComboBox}" />
+            <Style TargetType="Slider" BasedOn="{StaticResource SSlider}" />
+            <Style TargetType="Button" BasedOn="{StaticResource SButton}" />
+            <!-- Pages start hidden; the code-behind shows one at a time and gives each its own slide transform. -->
+            <Style x:Key="SPage" TargetType="StackPanel">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid x:Name="Root">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="224" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <!-- Navigation -->
+        <DockPanel Margin="12,16,8,16">
+            <StackPanel DockPanel.Dock="Top" Margin="8,4,0,24" Orientation="Horizontal">
+                <Image Width="40" Height="26" Source="{StaticResource SLogoImage}" />
+                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="15" FontWeight="SemiBold" Text="Kedip" />
+                    <TextBlock x:Name="NavVersionText" FontSize="12" Foreground="{StaticResource STextSecondaryBrush}"
+                               Typography.NumeralAlignment="Tabular" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Margin="16,0,0,4" Orientation="Horizontal"
+                        ToolTip="Setiap perubahan langsung dipakai dan disimpan.">
+                <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource SIconFont}" FontSize="12"
+                           Foreground="{StaticResource SAccentBrush}" Text="&#xE73E;" />
+                <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"
+                           Foreground="{StaticResource STextTertiaryBrush}" Text="Tersimpan otomatis" />
+            </StackPanel>
+
+            <StackPanel x:Name="Nav" KeyboardNavigation.DirectionalNavigation="Cycle">
+                <RadioButton x:Name="NavAppearance" Style="{StaticResource SNavItem}" Tag="&#xE771;" Content="Tampilan" />
+                <RadioButton x:Name="NavMascot" Style="{StaticResource SNavItem}" Tag="&#xE890;" Content="Maskot" />
+                <RadioButton x:Name="NavMusic" Style="{StaticResource SNavItem}" Tag="&#xE8D6;" Content="Musik" />
+                <RadioButton x:Name="NavPrayer" Style="{StaticResource SNavItem}" Tag="&#xE708;" Content="Sholat" />
+                <RadioButton x:Name="NavWater" Style="{StaticResource SNavItem}" Tag="&#xEB42;" Content="Minum" />
+                <RadioButton x:Name="NavTimer" Style="{StaticResource SNavItem}" Tag="&#xE916;" Content="Timer" />
+                <RadioButton x:Name="NavGeneral" Style="{StaticResource SNavItem}" Tag="&#xE713;" Content="Umum" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Pages -->
+        <ScrollViewer x:Name="Scroller" Grid.Column="1" Focusable="False" CanContentScroll="False"
+                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="16,28,32,8" MaxWidth="600">
+
+                <!-- Tampilan -->
+                <StackPanel x:Name="PageAppearance" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Tampilan" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Atur ukuran, posisi, dan gerak notch. Hasilnya langsung terlihat." />
+
+                    <Border Style="{StaticResource SCard}" Padding="6">
+                        <s:NotchPreview x:Name="Preview" Height="112" />
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Ukuran" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <s:SettingRow Header="Ukuran notch">
+                                <s:SegmentedControl x:Name="SizeSegments" Segments="Kecil|Sedang|Besar|Kustom" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Lebar" Description="Geser untuk ukuran kustom">
+                                <StackPanel Orientation="Horizontal">
+                                    <Slider x:Name="WidthSlider" Width="176" Minimum="80" Maximum="320" LargeChange="20"
+                                            AutomationProperties.Name="Lebar notch" />
+                                    <TextBlock x:Name="WidthValue" Width="40" Style="{StaticResource SValue}" />
+                                </StackPanel>
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Tinggi">
+                                <StackPanel Orientation="Horizontal">
+                                    <Slider x:Name="HeightSlider" Width="176" Minimum="22" Maximum="44" LargeChange="4"
+                                            AutomationProperties.Name="Tinggi notch" />
+                                    <TextBlock x:Name="HeightValue" Width="40" Style="{StaticResource SValue}" />
+                                </StackPanel>
+                            </s:SettingRow>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Posisi dan gerak" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <s:SettingRow Header="Posisi" Description="Letak notch di tepi atas layar">
+                                <s:SegmentedControl x:Name="PositionSegments" Segments="Kiri|Tengah|Kanan" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="AnimationsSwitch" Content="Animasi"
+                                      Tag="Gerak halus saat notch membuka dan menutup" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="FullscreenSwitch" Content="Sembunyikan saat aplikasi fullscreen"
+                                      Tag="Notch minggir dulu saat kamu nonton video atau main game" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Maskot -->
+                <StackPanel x:Name="PageMascot" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Maskot" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Sepasang mata kecil yang menemani kamu dari notch." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <s:SettingRow x:Name="IdleStyleRow" Header="Saat diam, tampilkan">
+                            <s:SegmentedControl x:Name="IdleStyleSegments" Segments="Mata|Jam" />
+                        </s:SettingRow>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Perilaku mata" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel x:Name="EyesOptions">
+                            <CheckBox x:Name="EyesOnDesktopSwitch" Content="Langsung muncul di desktop"
+                                      Tag="Mata keluar begitu desktop terlihat dan melirik kursor" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Muncul setelah diam" Description="Saat ada aplikasi yang terbuka">
+                                <s:NumberBox x:Name="EyesIdleBox" Minimum="3" Maximum="120" Suffix="detik"
+                                             AutomationProperties.Name="Muncul setelah diam, detik" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Mengantuk setelah" Description="Tanpa gerakan mouse atau ketikan">
+                                <s:NumberBox x:Name="DrowsyBox" Minimum="1" Maximum="60" Suffix="menit"
+                                             AutomationProperties.Name="Mengantuk setelah, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Tidur setelah" Description="Selalu lebih lama dari mengantuk">
+                                <s:NumberBox x:Name="SleepBox" Minimum="2" Maximum="240" Suffix="menit"
+                                             AutomationProperties.Name="Tidur setelah, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="FollowCursorSwitch" Content="Mata mengikuti kursor"
+                                      Tag="Melirik ke arah pointer mouse" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Musik -->
+                <StackPanel x:Name="PageMusic" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Musik" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Lagu yang sedang diputar, lengkap dengan liriknya." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <CheckBox x:Name="MusicSwitch" Content="Tampilkan musik"
+                                      Tag="Judul, artis, dan kontrol putar dari aplikasi musik apa pun" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="LyricsSwitch" Content="Lirik"
+                                      Tag="Lirik tersinkron dari LRCLIB, butuh internet" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="LyricsInNotchSwitch" Content="Lirik di notch"
+                                      Tag="Baris lirik ikut berjalan walau notch sedang tertutup" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Sholat -->
+                <StackPanel x:Name="PagePrayer" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Waktu sholat" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Jadwal sholat harian dengan parameter Kemenag RI." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <CheckBox x:Name="PrayerSwitch" Content="Tampilkan waktu sholat"
+                                  Tag="Jadwal hari ini dan hitung mundur ke waktu berikutnya" />
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Lokasi" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel x:Name="PrayerLocation">
+                            <s:SettingRow Header="Kota">
+                                <ComboBox x:Name="CityCombo" Width="208" IsTextSearchEnabled="True"
+                                          AutomationProperties.Name="Kota" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow x:Name="LatitudeRow" Header="Lintang" Description="Bisa tempel &quot;lintang, bujur&quot; dari Google Maps">
+                                <s:NumberBox x:Name="LatitudeBox" Minimum="-90" Maximum="90" Step="0.01" Decimals="4"
+                                             AutomationProperties.Name="Lintang" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow x:Name="LongitudeRow" Header="Bujur">
+                                <s:NumberBox x:Name="LongitudeBox" Minimum="-180" Maximum="180" Step="0.01" Decimals="4"
+                                             AutomationProperties.Name="Bujur" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow x:Name="TimeZoneRow" Header="Zona waktu">
+                                <s:NumberBox x:Name="TimeZoneBox" Minimum="-12" Maximum="14" Step="0.5" Decimals="2" Suffix="jam"
+                                             AutomationProperties.Name="Zona waktu, jam dari UTC" />
+                            </s:SettingRow>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Pengingat" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel x:Name="PrayerReminderOptions">
+                            <s:SettingRow Header="Ihtiyat" Description="Menit pengaman tambahan di jadwal">
+                                <s:NumberBox x:Name="IhtiyatBox" Minimum="0" Maximum="5" Suffix="menit"
+                                             AutomationProperties.Name="Ihtiyat, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="PrayerReminderSwitch" Content="Pengingat"
+                                      Tag="Notch memberi tahu saat masuk waktu sholat" />
+                            <Border Style="{StaticResource SDivider}" />
+                            <CheckBox x:Name="PrayerSoundSwitch" Content="Suara" Tag="Bunyi lembut bersama pengingat" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Minum -->
+                <StackPanel x:Name="PageWater" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Pengingat minum" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Biar badan tetap segar dan terhidrasi sepanjang hari." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <CheckBox x:Name="WaterSwitch" Content="Ingatkan minum" Tag="Notch mengingatkan kamu minum segelas air" />
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Target" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel x:Name="WaterTarget">
+                            <s:SettingRow x:Name="WaterGoalRow" Header="Target harian">
+                                <s:NumberBox x:Name="WaterGoalBox" Minimum="250" Maximum="6000" Step="250" Suffix="ml"
+                                             AutomationProperties.Name="Target harian, ml" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Ukuran gelas">
+                                <s:NumberBox x:Name="GlassBox" Minimum="50" Maximum="1000" Step="50" Suffix="ml"
+                                             AutomationProperties.Name="Ukuran gelas, ml" />
+                            </s:SettingRow>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Jadwal" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel x:Name="WaterSchedule">
+                            <s:SettingRow Header="Ingatkan setiap">
+                                <s:NumberBox x:Name="WaterIntervalBox" Minimum="15" Maximum="240" Step="15" Suffix="menit"
+                                             AutomationProperties.Name="Ingatkan setiap, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Mulai dari jam">
+                                <ComboBox x:Name="WaterStartCombo" Width="140" AutomationProperties.Name="Mulai dari jam" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Sampai jam">
+                                <ComboBox x:Name="WaterEndCombo" Width="140" AutomationProperties.Name="Sampai jam" />
+                            </s:SettingRow>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Timer -->
+                <StackPanel x:Name="PageTimer" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Timer fokus" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Pomodoro: fokus sebentar, lalu istirahat sejenak." />
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Durasi" />
+                    <Border Style="{StaticResource SCard}">
+                        <StackPanel>
+                            <s:SettingRow Header="Fokus">
+                                <s:NumberBox x:Name="FocusBox" Minimum="5" Maximum="120" Step="5" Suffix="menit"
+                                             AutomationProperties.Name="Fokus, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Istirahat pendek">
+                                <s:NumberBox x:Name="ShortBreakBox" Minimum="1" Maximum="30" Suffix="menit"
+                                             AutomationProperties.Name="Istirahat pendek, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Istirahat panjang">
+                                <s:NumberBox x:Name="LongBreakBox" Minimum="5" Maximum="60" Step="5" Suffix="menit"
+                                             AutomationProperties.Name="Istirahat panjang, menit" />
+                            </s:SettingRow>
+                            <Border Style="{StaticResource SDivider}" />
+                            <s:SettingRow Header="Istirahat panjang setelah" Description="Jumlah sesi fokus sebelum istirahat panjang">
+                                <s:NumberBox x:Name="SessionsBox" Minimum="2" Maximum="10" Suffix="sesi"
+                                             AutomationProperties.Name="Sesi sebelum istirahat panjang" />
+                            </s:SettingRow>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SCard}">
+                        <CheckBox x:Name="TimerSoundSwitch" Content="Suara" Tag="Bunyi singkat saat sesi selesai" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Umum -->
+                <StackPanel x:Name="PageGeneral" Style="{StaticResource SPage}">
+                    <TextBlock Style="{StaticResource SPageTitle}" Text="Umum" />
+                    <TextBlock Style="{StaticResource SPageSubtitle}" Text="Startup, data, dan info aplikasi." />
+
+                    <Border Style="{StaticResource SCard}">
+                        <CheckBox x:Name="StartupSwitch" Content="Mulai bersama Windows"
+                                  Tag="Kedip langsung jalan setiap kali kamu masuk ke Windows" />
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Data" />
+                    <Border Style="{StaticResource SCard}">
+                        <Grid Margin="12,10" MinHeight="32">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,16,0" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource SLabel}" Text="Folder data" />
+                                <TextBlock x:Name="DataPathText" Style="{StaticResource SHint}" TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <Button Grid.Column="1" Click="OnOpenDataFolder" AutomationProperties.Name="Buka folder data">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource SIconFont}" FontSize="14"
+                                               Text="&#xE838;" />
+                                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="Buka folder data" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource SSectionTitle}" Text="Tentang" />
+                    <Border Style="{StaticResource SCard}">
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Image Width="56" Height="36" VerticalAlignment="Center" Source="{StaticResource SLogoImage}" />
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontSize="15" FontWeight="SemiBold" Text="Kedip" />
+                                    <TextBlock x:Name="AboutVersionText" Margin="8,0,0,1" VerticalAlignment="Bottom"
+                                               Foreground="{StaticResource STextSecondaryBrush}" Typography.NumeralAlignment="Tabular" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource SHint}" Text="Notch ringan buatan sendiri. Terinspirasi Nusa &amp; Intip." />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
 </Window>

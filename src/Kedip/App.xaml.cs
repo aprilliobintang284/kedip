@@ -85,6 +85,11 @@ public partial class App : Application
 
         if (_settingsWindow is not null)
         {
+            if (_settingsWindow.WindowState == WindowState.Minimized)
+            {
+                _settingsWindow.WindowState = WindowState.Normal;
+            }
+
             _settingsWindow.Activate();
             return;
         }
