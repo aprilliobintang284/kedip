@@ -74,10 +74,7 @@ public partial class DockWindow : Window
         };
         MouseEnter += (_, _) => Evaluate();
         Closed += OnClosed;
-        foreach (var island in new[] { StartIsland, AppsIsland, StatusIsland })
-        {
-            island.SizeChanged += (_, _) => ScheduleShape();
-        }
+        Bar.SizeChanged += (_, _) => ScheduleShape();
 
         StartButton.Click += (_, _) => TogglePanel(() => new AppsPanelWindow(_services), HorizontalAlignment.Left);
         StartButton.ContextMenu = QuickMenu.Start(this, () => _menuOpen = true, () =>
@@ -138,7 +135,7 @@ public partial class DockWindow : Window
 
     private bool _shapePending;
 
-    /// <summary>Re-cuts the window to the islands once the layout has settled (apps come and go, widths change).</summary>
+    /// <summary>Re-cuts the window to the capsule once the layout has settled (apps come and go, widths change).</summary>
     private void ScheduleShape()
     {
         if (_shapePending)
@@ -154,7 +151,7 @@ public partial class DockWindow : Window
         });
     }
 
-    /// <summary>Only the islands are window (blur, clicks); the gaps between them show and reach the desktop.</summary>
+    /// <summary>Only the capsule is window (blur, clicks): its round ends leave the corners to the desktop.</summary>
     private void ApplyShape()
     {
         if (_hwnd == IntPtr.Zero || ActualWidth <= 0)
@@ -163,17 +160,8 @@ public partial class DockWindow : Window
         }
 
         var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
-        var rects = new List<Rect>();
-        foreach (var island in new FrameworkElement[] { StartIsland, AppsIsland, StatusIsland })
-        {
-            if (island.IsVisible && island.ActualWidth > 0)
-            {
-                var bounds = island.TransformToAncestor(this).TransformBounds(new Rect(island.RenderSize));
-                rects.Add(Rect.Transform(bounds, toDevice));
-            }
-        }
-
-        Glass.Shape(_hwnd, rects, StartIsland.ActualHeight / 2 * toDevice.M22);
+        var bounds = Bar.TransformToAncestor(this).TransformBounds(new Rect(Bar.RenderSize));
+        Glass.Shape(_hwnd, [Rect.Transform(bounds, toDevice)], Bar.ActualHeight / 2 * toDevice.M22);
     }
 
     // ---- "Gantikan taskbar" --------------------------------------------------------------------------------------
