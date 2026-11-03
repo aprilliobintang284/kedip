@@ -27,6 +27,9 @@ public partial class ControlPanelWindow : GlassPanel
     private readonly Tile _planeTile;
     private readonly Tile _dndTile;
     private readonly Tile _focusTile;
+    private readonly Tile _saverTile;
+    private readonly Tile _nightTile;
+    private readonly Tile _hotspotTile;
     private Radio? _wifi;
     private Radio? _bluetooth;
     private bool _syncing;
@@ -44,9 +47,9 @@ public partial class ControlPanelWindow : GlassPanel
         _planeTile = AddTile(0xE709, "Mode pesawat", "ms-settings:network-airplanemode", () => _ = TogglePlaneAsync());
         _dndTile = AddTile(0xE708, "Jangan ganggu", null, () => _services.Settings.Update(s => s.DoNotDisturb = !s.DoNotDisturb));
         _focusTile = AddTile(0xE916, "Timer fokus", null, ToggleFocus);
-        AddShortcut(0xEBB6, "Hemat baterai", "ms-settings:batterysaver");
-        AddShortcut(0xF08C, "Lampu malam", "ms-settings:nightlight");
-        AddShortcut(0xE704, "Hotspot", "ms-settings:network-mobilehotspot");
+        _saverTile = AddTile(0xEBB6, "Hemat daya", "ms-settings:powersleep", ToggleSaver);
+        _nightTile = AddTile(0xF08C, "Lampu malam", "ms-settings:nightlight", ToggleNightLight);
+        _hotspotTile = AddTile(0xE704, "Hotspot", "ms-settings:network-mobilehotspot", () => _ = ToggleHotspotAsync());
         AddTile(0xE7F4, "Proyeksikan", "ms-settings:display", () =>
         {
             CloseSmooth();
@@ -82,6 +85,7 @@ public partial class ControlPanelWindow : GlassPanel
         UpdateLocalTiles();
         UpdateBattery();
         _ = LoadBrightnessAsync();
+        _ = UpdateSystemTilesAsync();
 
         (_wifi, _bluetooth) = await RadioControl.GetAsync();
         if (_wifi is not null)
@@ -196,9 +200,6 @@ public partial class ControlPanelWindow : GlassPanel
         return tile;
     }
 
-    private void AddShortcut(int glyph, string title, string settingsPage) =>
-        AddTile(glyph, title, settingsPage, () => OpenAndClose(settingsPage));
-
     /// <summary>On = filled with the accent (dark glyphs), like Windows; the label can carry a status (network name, time left).</summary>
     private void SetState(Tile tile, bool on, string label)
     {
@@ -241,6 +242,54 @@ public partial class ControlPanelWindow : GlassPanel
         {
             SyncDetailSwitch(_page == Page.Wifi ? wifiOn : btOn);
         }
+    }
+
+    /// <summary>Power mode, night light and hotspot: read their real state (the hotspot query can take a moment).</summary>
+    private async Task UpdateSystemTilesAsync()
+    {
+        SetState(_saverTile, PowerMode.IsEfficient(), "Hemat daya");
+        SetState(_nightTile, NightLight.IsOn() == true, "Lampu malam");
+        bool hotspot = await Task.Run(() => Hotspot.IsOn() == true);
+        SetState(_hotspotTile, hotspot, "Hotspot");
+    }
+
+    private void ToggleSaver()
+    {
+        bool on = !PowerMode.IsEfficient();
+        if (!PowerMode.SetEfficient(on))
+        {
+            OpenAndClose("ms-settings:powersleep");
+            return;
+        }
+
+        SetState(_saverTile, PowerMode.IsEfficient(), "Hemat daya");
+    }
+
+    private void ToggleNightLight()
+    {
+        if (NightLight.IsOn() is not { } on || !NightLight.Set(!on))
+        {
+            // Unknown layout of Windows' setting: let Settings do it.
+            OpenAndClose("ms-settings:nightlight");
+            return;
+        }
+
+        SetState(_nightTile, !on, "Lampu malam");
+    }
+
+    private async Task ToggleHotspotAsync()
+    {
+        bool on = await Task.Run(() => Hotspot.IsOn() == true);
+        SetState(_hotspotTile, !on, on ? "Mematikan…" : "Menyalakan…");
+        string? problem = await Hotspot.SetAsync(!on);
+        if (problem is not null)
+        {
+            Log.Warn($"Hotspot: {problem}");
+            OpenAndClose("ms-settings:network-mobilehotspot");
+            return;
+        }
+
+        await UpdateSystemTilesAsync();
     }
 
     private void UpdateLocalTiles()

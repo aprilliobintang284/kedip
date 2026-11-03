@@ -12,6 +12,8 @@ namespace Kedip.Interop;
 internal static class ShellItems
 {
     private static readonly PROPERTYKEY AppUserModelId = new(new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), 5);
+    private static readonly PROPERTYKEY RelaunchIcon = new(new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), 3);
+    private static readonly PROPERTYKEY RelaunchDisplayName = new(new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), 4);
     private static readonly PROPERTYKEY LinkTargetParsingPath = new(new Guid("B9B4B3FC-2B51-4A42-B5D8-324146AFCF25"), 2);
 
     /// <summary>Display name of a parsing name such as <c>shell:AppsFolder\&lt;aumid&gt;</c> or an exe path.</summary>
@@ -139,34 +141,60 @@ internal static class ShellItems
     }
 
     /// <summary>The AppUserModelID a window was given (UWP frames, Chrome profiles, WhatsApp …), or null.</summary>
-    public static string? WindowAppId(IntPtr hwnd)
+    public static string? WindowAppId(IntPtr hwnd) => WindowIdentity(hwnd).AppId;
+
+    /// <summary>
+    /// What a window tells the taskbar about itself: its AppUserModelID and, for apps with several identities (Chrome
+    /// profiles), the name and icon ("path,index") its taskbar button should show. Any of them may be null.
+    /// </summary>
+    public static (string? AppId, string? Name, string? Icon) WindowIdentity(IntPtr hwnd)
     {
         var iid = typeof(IPropertyStore).GUID;
         if (SHGetPropertyStoreForWindow(hwnd, ref iid, out object? storeObject) != 0 || storeObject is not IPropertyStore store)
+        {
+            return (null, null, null);
+        }
+
+        try
+        {
+            return (ReadString(store, AppUserModelId), ReadString(store, RelaunchDisplayName), ReadString(store, RelaunchIcon));
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(store);
+        }
+    }
+
+    /// <summary>Picture for an icon resource such as <c>C:\…\Google Profile.ico,0</c> (the index is ignored).</summary>
+    public static BitmapSource? IconResource(string resource, int size)
+    {
+        string path = Environment.ExpandEnvironmentVariables(resource);
+        int comma = path.LastIndexOf(',');
+        if (comma > 1 && int.TryParse(path.AsSpan(comma + 1), out _))
+        {
+            path = path[..comma];
+        }
+
+        return Image(path.Trim('"'), size);
+    }
+
+    private static string? ReadString(IPropertyStore store, PROPERTYKEY property)
+    {
+        var key = property;
+        if (store.GetValue(ref key, out PROPVARIANT value) != 0)
         {
             return null;
         }
 
         try
         {
-            var key = AppUserModelId;
-            if (store.GetValue(ref key, out PROPVARIANT value) != 0)
-            {
-                return null;
-            }
-
-            try
-            {
-                return value.vt == VT_LPWSTR && value.pointer != IntPtr.Zero ? Marshal.PtrToStringUni(value.pointer) : null;
-            }
-            finally
-            {
-                PropVariantClear(ref value);
-            }
+            return value.vt == VT_LPWSTR && value.pointer != IntPtr.Zero && Marshal.PtrToStringUni(value.pointer) is { Length: > 0 } text
+                ? text
+                : null;
         }
         finally
         {
-            Marshal.ReleaseComObject(store);
+            PropVariantClear(ref value);
         }
     }
 

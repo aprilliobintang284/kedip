@@ -40,6 +40,10 @@ public partial class DockWindow : Window
     private bool _away;
     private bool _menuOpen;
     private GlassPanel? _panel;
+    private WindowPreview? _preview;
+    private readonly DispatcherTimer _previewShow = new() { Interval = TimeSpan.FromMilliseconds(380) };
+    private readonly DispatcherTimer _previewHide = new() { Interval = TimeSpan.FromMilliseconds(300) };
+    private (DockApp App, FrameworkElement Tile)? _previewTarget;
     private AppBar? _appBar;
     private uint _taskbarCreatedMessage;
     private bool _taskbarPeek;
@@ -59,6 +63,19 @@ public partial class DockWindow : Window
         _liveTimer.Tick += (_, _) => LiveTick();
         _clockTimer = new DispatcherTimer(DispatcherPriority.Background);
         _clockTimer.Tick += (_, _) => UpdateClock();
+        _previewShow.Tick += (_, _) =>
+        {
+            _previewShow.Stop();
+            ShowPreview();
+        };
+        _previewHide.Tick += (_, _) =>
+        {
+            _previewHide.Stop();
+            if (_preview?.IsMouseOver != true && _previewTarget?.Tile.IsMouseOver != true)
+            {
+                HidePreview();
+            }
+        };
 
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
@@ -250,6 +267,7 @@ public partial class DockWindow : Window
             return;
         }
 
+        HidePreview();
         _panel?.CloseSmooth();
         var panel = create();
         _panel = panel;
@@ -299,6 +317,7 @@ public partial class DockWindow : Window
         _services.Power.Changed -= OnPowerChanged;
         _services.Weather.Updated -= OnWeatherUpdated;
         _tray.Dispose();
+        _preview?.Close();
         _volume.Dispose();
         _appBar?.Release();
         if (TaskbarControl.IsHiddenByKedip)
@@ -501,7 +520,8 @@ public partial class DockWindow : Window
         body.Children.Add(face);
         body.Children.Add(dot);
 
-        var tile = new Button { Style = (Style)FindResource("DockPlainButton"), Content = body, ToolTip = app.Name };
+        // Running apps show their window previews on hover instead of a tooltip.
+        var tile = new Button { Style = (Style)FindResource("DockPlainButton"), Content = body, ToolTip = app.IsRunning ? null : app.Name };
         AutomationProperties.SetName(tile, app.Name + (app.IsRunning ? $" ({app.Windows.Count})" : ""));
         void Scale(double to)
         {
@@ -510,17 +530,93 @@ public partial class DockWindow : Window
             pop.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(to, duration) { EasingFunction = SlideEase });
         }
 
-        tile.MouseEnter += (_, _) => Scale(1.1);
-        tile.MouseLeave += (_, _) => Scale(1);
+        tile.MouseEnter += (_, _) =>
+        {
+            Scale(1.1);
+            HoverPreview(app, tile);
+        };
+        tile.MouseLeave += (_, _) =>
+        {
+            Scale(1);
+            LeavePreview();
+        };
         tile.PreviewMouseLeftButtonDown += (_, _) => Scale(0.94);
         tile.PreviewMouseLeftButtonUp += (_, _) => Scale(tile.IsMouseOver ? 1.1 : 1);
         tile.Click += (_, _) =>
         {
+            HidePreview();
             DockApps.Click(app);
             _appsSignature = "";
         };
         tile.ContextMenu = BuildAppMenu(app);
         return tile;
+    }
+
+    // ---- Window previews -------------------------------------------------------------------------------------------
+
+    /// <summary>Hovering a running app's tile: previews after a short pause, or at once when previews are already up.</summary>
+    private void HoverPreview(DockApp app, FrameworkElement tile)
+    {
+        _previewHide.Stop();
+        _previewTarget = (app, tile);
+        if (!app.IsRunning || _panel is not null)
+        {
+            _previewShow.Stop();
+            if (_preview?.IsVisible == true)
+            {
+                HidePreview();
+            }
+
+            return;
+        }
+
+        if (_preview?.IsVisible == true)
+        {
+            ShowPreview();
+        }
+        else
+        {
+            _previewShow.Stop();
+            _previewShow.Start();
+        }
+    }
+
+    private void LeavePreview()
+    {
+        _previewShow.Stop();
+        _previewHide.Stop();
+        _previewHide.Start();
+    }
+
+    private void ShowPreview()
+    {
+        if (_previewTarget is not { } target || !target.Tile.IsLoaded || !target.App.IsRunning)
+        {
+            return;
+        }
+
+        if (_preview is null)
+        {
+            _preview = new WindowPreview();
+            _preview.MouseEnter += (_, _) => _previewHide.Stop();
+            _preview.MouseLeave += (_, _) => LeavePreview();
+        }
+
+        double centerX = Left + target.Tile.TranslatePoint(new Point(target.Tile.ActualWidth / 2, 0), this).X;
+        _menuOpen = true;
+        _preview.ShowFor(target.App, centerX, ShownTop - 8, Animations);
+    }
+
+    private void HidePreview()
+    {
+        _previewShow.Stop();
+        _previewHide.Stop();
+        if (_preview?.IsVisible == true)
+        {
+            _preview.HideNow();
+            _menuOpen = _panel is not null;
+            Evaluate();
+        }
     }
 
     /// <summary>Right-click on the clock: the Windows date settings and Windows' own notification centre.</summary>

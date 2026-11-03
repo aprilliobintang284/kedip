@@ -15,8 +15,8 @@ internal sealed class DockApp
     public required string Key { get; init; }
     public string? AppId { get; init; }
     public string? ExePath { get; init; }
-    public required string Name { get; init; }
-    public ImageSource? Icon { get; init; }
+    public required string Name { get; set; }
+    public ImageSource? Icon { get; set; }
     public bool IsPinned { get; init; }
     public List<IntPtr> Windows { get; } = [];
     public bool IsActive { get; set; }
@@ -44,7 +44,8 @@ internal sealed class DockApps
     private readonly Dictionary<string, (string Name, ImageSource? Icon, string? Exe)> _identities = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<uint, string?> _processPaths = [];
     private readonly Dictionary<uint, string?> _processAppIds = [];
-    private readonly Dictionary<IntPtr, string?> _windowIds = [];
+    private readonly Dictionary<IntPtr, (string? AppId, string? Name, string? Icon)> _windowIds = [];
+    private readonly Dictionary<string, ImageSource?> _windowIcons = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Pinned apps (in order) followed by running unpinned ones. UI thread.</summary>
     public List<DockApp> Build(IReadOnlyList<string> pinned)
@@ -60,19 +61,33 @@ internal sealed class DockApps
             }
         }
 
+        // Grouped the way the Windows taskbar does it: by AppUserModelID. A window that names its own id only joins a pin
+        // with that id (so each Chrome profile gets its own button); a window without one joins by program.
         var extra = new Dictionary<string, DockApp>(StringComparer.OrdinalIgnoreCase);
         foreach (var w in windows)
         {
-            var owner = apps.FirstOrDefault(a => SameAppId(a.AppId, w.AppId))
-                ?? apps.FirstOrDefault(a => w.ExePath is not null && SameApp(a.ExePath, w.ExePath));
+            var owner = w.AppId is not null
+                ? apps.FirstOrDefault(a => SameAppId(a.AppId, w.AppId))
+                : apps.FirstOrDefault(a => a.ExePath is not null && w.ExePath is not null && SameApp(a.ExePath, w.ExePath));
             if (owner is null)
             {
                 string key = w.AppId is not null ? "aumid:" + w.AppId : "path:" + (w.ExePath ?? "?");
                 if (!extra.TryGetValue(key, out owner))
                 {
-                    owner = Resolve(key, pinned: false, fallbackName: w.Title) ?? new DockApp { Key = key, Name = w.Title };
+                    owner = Resolve(key, pinned: false, fallbackName: w.Name ?? w.Title) ?? new DockApp { Key = key, Name = w.Name ?? w.Title };
+                    if (w.Name is not null)
+                    {
+                        owner.Name = w.Name;
+                    }
+
                     extra[key] = owner;
                 }
+            }
+
+            // The window's own icon wins, as on the taskbar (Chrome shows the profile picture on its button).
+            if (owner.Windows.Count == 0 && w.Icon is not null && WindowIcon(w.Icon) is { } icon)
+            {
+                owner.Icon = icon;
             }
 
             owner.Windows.Add(w.Hwnd);
@@ -102,8 +117,9 @@ internal sealed class DockApps
     }
 
     /// <summary>
-    /// Same exe, or the pin points at a Squirrel launcher (Discord, Slack, …: <c>…\Discord\Update.exe</c>) and the window
-    /// runs from that app's folder (<c>…\Discord\app-1.0.9\Discord.exe</c>).
+    /// Same exe, or a Squirrel-installed app (Discord, Slack, …): the pin points at a launcher in the app's folder
+    /// (<c>…\Discord\Update.exe</c> or <c>…\Discord\Discord.exe</c>) and the window runs from a versioned subfolder
+    /// (<c>…\Discord\app-1.0.9266\Discord.exe</c>).
     /// </summary>
     private static bool SameApp(string? pinnedExe, string windowExe)
     {
@@ -117,9 +133,21 @@ internal sealed class DockApps
             return true;
         }
 
-        return string.Equals(Path.GetFileName(pinnedExe), "Update.exe", StringComparison.OrdinalIgnoreCase)
-            && Path.GetDirectoryName(pinnedExe) is { Length: > 3 } folder
-            && windowExe.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        string? windowFolder = Path.GetDirectoryName(windowExe);
+        return windowFolder is not null
+            && Path.GetFileName(windowFolder).StartsWith("app-", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(Path.GetDirectoryName(windowFolder), Path.GetDirectoryName(pinnedExe), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private ImageSource? WindowIcon(string resource)
+    {
+        if (!_windowIcons.TryGetValue(resource, out var icon))
+        {
+            icon = ShellItems.IconResource(resource, 64);
+            _windowIcons[resource] = icon;
+        }
+
+        return icon;
     }
 
     /// <summary>Opens the app if it has no window; otherwise brings it forward, or minimizes it if it is already in front.</summary>
@@ -166,9 +194,11 @@ internal sealed class DockApps
     {
         foreach (var hwnd in app.Windows)
         {
-            PostMessage(hwnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+            CloseWindow(hwnd);
         }
     }
+
+    public static void CloseWindow(IntPtr hwnd) => PostMessage(hwnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
 
     public static void Activate(IntPtr hwnd)
     {
@@ -261,7 +291,7 @@ internal sealed class DockApps
         return (display, File.Exists(path) ? ShellItems.Image(path, 64) : null, path);
     }
 
-    private sealed record AppWindow(IntPtr Hwnd, string? AppId, string? ExePath, string Title);
+    private sealed record AppWindow(IntPtr Hwnd, string? AppId, string? ExePath, string Title, string? Name, string? Icon);
 
     private List<AppWindow> EnumerateWindows()
     {
@@ -284,23 +314,25 @@ internal sealed class DockApps
                 _processPaths[pid] = path;
             }
 
-            if (!_windowIds.TryGetValue(hwnd, out string? appId))
+            if (!_windowIds.TryGetValue(hwnd, out var identity))
             {
                 // The window's own id (UWP frames, Chrome profiles …), else the id of its packaged process (Store apps).
-                appId = ShellItems.WindowAppId(hwnd);
-                if (appId is null)
+                identity = ShellItems.WindowIdentity(hwnd);
+                if (identity.AppId is null)
                 {
-                    if (!_processAppIds.TryGetValue(pid, out appId))
+                    if (!_processAppIds.TryGetValue(pid, out string? packaged))
                     {
-                        appId = ShellItems.PackagedAppId(pid);
-                        _processAppIds[pid] = appId;
+                        packaged = ShellItems.PackagedAppId(pid);
+                        _processAppIds[pid] = packaged;
                     }
+
+                    identity.AppId = packaged;
                 }
 
-                _windowIds[hwnd] = appId;
+                _windowIds[hwnd] = identity;
             }
 
-            result.Add(new AppWindow(hwnd, appId, path, WindowTitle(hwnd)));
+            result.Add(new AppWindow(hwnd, identity.AppId, path, WindowTitle(hwnd), identity.Name, identity.Icon));
             return true;
         }, IntPtr.Zero);
 
@@ -354,7 +386,7 @@ internal sealed class DockApps
         return !ForegroundWatcher.IsShellClass(cls) && cls != "Windows.UI.Core.CoreWindow";
     }
 
-    private static string WindowTitle(IntPtr hwnd)
+    internal static string WindowTitle(IntPtr hwnd)
     {
         int length = GetWindowTextLength(hwnd);
         if (length <= 0)
