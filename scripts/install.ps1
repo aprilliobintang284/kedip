@@ -22,5 +22,9 @@ $link.IconLocation = "$exe,0"
 $link.Description = 'Kedip - notch ringan buatan Aprillio'
 $link.Save()
 
-Start-Process -FilePath $exe -WorkingDirectory $Destination
+# Start it through the WMI process service instead of as a child of this shell: a shell inside a packaged app (such
+# as an AI desktop app's terminal) would pass its private, virtualized view of AppData and HKCU on to Kedip, and its
+# settings and "start with Windows" entry would never reach the real ones.
+$started = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = "`"$exe`""; CurrentDirectory = $Destination }
+if ($started.ReturnValue -ne 0) { Start-Process -FilePath $exe -WorkingDirectory $Destination }
 "Kedip installed to $Destination"
