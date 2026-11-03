@@ -8,6 +8,12 @@ namespace Kedip.Notifications;
 
 public sealed record NotificationApp(string AppId, string Name);
 
+/// <summary>A notification Windows still keeps in its notification centre. <see cref="Key"/> identifies it for dismissing.</summary>
+public sealed record NotificationItem(DateTime Time, string AppId, string Title, string Body)
+{
+    public string Key => $"{Time.ToFileTimeUtc()}|{AppId}";
+}
+
 /// <summary>
 /// Mirrors Windows toast notifications (WhatsApp, Discord, …) into the notch. Reads the user's own notification
 /// database read-only whenever it changes; nothing leaves the PC. Which apps show is chosen in the settings.
@@ -63,6 +69,44 @@ public sealed class NotificationService : IAppService
         _backstop.Tick += (_, _) => _ = PollAsync();
         _settings.Changed += OnSettingsChanged;
         ApplyEnabled();
+    }
+
+    /// <summary>
+    /// The toasts Windows still holds (what its notification centre lists), newest first, without the ones cleared or
+    /// dismissed in Kedip. Reads on the thread pool with its own connection.
+    /// </summary>
+    public Task<List<NotificationItem>> GetCurrentAsync(int max = 60)
+    {
+        var s = _settings.Current;
+        long clearedBefore = s.NotificationsClearedBefore;
+        var dismissed = new HashSet<string>(s.NotificationsDismissed, StringComparer.Ordinal);
+        return Task.Run(() =>
+        {
+            var items = new List<NotificationItem>();
+            using var db = WinSqlite.OpenReadOnly(DbPath);
+            if (db is null)
+            {
+                return items;
+            }
+
+            db.Query(
+                "SELECT n.ArrivalTime, h.PrimaryId, n.Payload FROM Notification n JOIN NotificationHandler h ON n.HandlerId = h.RecordId " +
+                "WHERE n.Type = 'toast' AND n.ArrivalTime > ?1 ORDER BY n.ArrivalTime DESC LIMIT ?2",
+                r =>
+                {
+                    string appId = r.Text(1);
+                    if (appId.Length > 0 && ParsePayload(r.Blob(2)) is { } text)
+                    {
+                        var item = new NotificationItem(DateTime.FromFileTimeUtc(r.Int64(0)).ToLocalTime(), appId, text.Title, text.Body);
+                        if (!dismissed.Contains(item.Key))
+                        {
+                            items.Add(item);
+                        }
+                    }
+                },
+                clearedBefore, max);
+            return items;
+        });
     }
 
     /// <summary>Apps that have sent notifications (now or earlier), with friendly names. UI thread.</summary>
@@ -350,7 +394,9 @@ public sealed class NotificationService : IAppService
     {
         var s = _settings.Current;
         RememberApp(toast.AppId);
-        if (!s.NotificationsEnabled || s.DoNotDisturb || s.NotificationMutedApps.Contains(toast.AppId, StringComparer.OrdinalIgnoreCase))
+        // Kedip's "Jangan ganggu" and Windows' Do Not Disturb both keep the notch quiet.
+        if (!s.NotificationsEnabled || s.DoNotDisturb || s.NotificationMutedApps.Contains(toast.AppId, StringComparer.OrdinalIgnoreCase)
+            || WindowsDoNotDisturb.IsOn() == true)
         {
             return;
         }

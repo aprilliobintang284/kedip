@@ -87,7 +87,8 @@ public partial class DockWindow : Window
         TrayButton.Click += (_, _) => TogglePanel(
             () => new TrayPanelWindow(_tray, _services.Settings.Current.DockReplaceTaskbar, _taskbarPeek, ToggleTaskbarPeek),
             HorizontalAlignment.Center, TrayButton);
-        ClockButton.Click += (_, _) => WinKeys.Win(WinKeys.N);
+        ClockButton.Click += (_, _) => TogglePanel(() => new ClockPanelWindow(_services), HorizontalAlignment.Right);
+        ClockButton.ContextMenu = ClockMenu();
         DesktopButton.Click += (_, _) => WinKeys.Win(WinKeys.D);
         TrayGlyph.Text = WinKeys.Glyph(0xE70E);
 
@@ -520,6 +521,21 @@ public partial class DockWindow : Window
         };
         tile.ContextMenu = BuildAppMenu(app);
         return tile;
+    }
+
+    /// <summary>Right-click on the clock: the Windows date settings and Windows' own notification centre.</summary>
+    private ContextMenu ClockMenu()
+    {
+        var menu = new ContextMenu();
+        menu.Opened += (_, _) => _menuOpen = true;
+        menu.Closed += (_, _) =>
+        {
+            _menuOpen = false;
+            Evaluate();
+        };
+        menu.Items.Add(MenuEntry("Atur tanggal & waktu", "", () => SystemActions.Open("ms-settings:dateandtime")));
+        menu.Items.Add(MenuEntry("Pusat notifikasi Windows", "", () => WinKeys.Win(WinKeys.N)));
+        return menu;
     }
 
     private ContextMenu BuildAppMenu(DockApp app)

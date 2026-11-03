@@ -87,6 +87,12 @@ public sealed class AppSettings
     /// <summary>App user model ids whose notifications are not shown.</summary>
     public List<string> NotificationMutedApps { get; set; } = [];
 
+    /// <summary>"Bersihkan" in the clock panel: notifications that arrived before this (UTC FILETIME) are no longer listed.</summary>
+    public long NotificationsClearedBefore { get; set; }
+
+    /// <summary>Notifications closed one by one in the clock panel (<see cref="Kedip.Notifications.NotificationItem.Key"/>).</summary>
+    public List<string> NotificationsDismissed { get; set; } = [];
+
     /// <summary>App user model ids that have sent a notification (for the settings list).</summary>
     public List<string> NotificationSeenApps { get; set; } = [];
 
