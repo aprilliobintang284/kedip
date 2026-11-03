@@ -308,6 +308,7 @@ public partial class ClockPanelWindow : GlassPanel
             bell.Children.Add(new TextBlock
             {
                 Text = "z",
+                FontFamily = (FontFamily)FindResource("UiFont"),
                 FontSize = 8.5,
                 FontWeight = FontWeights.Bold,
                 HorizontalAlignment = HorizontalAlignment.Right,
