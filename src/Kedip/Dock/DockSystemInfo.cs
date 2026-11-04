@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using Windows.Networking.Connectivity;
 using Kedip.Core;
 
 namespace Kedip.DockBar;
@@ -210,5 +211,57 @@ internal sealed class SystemVolume : IDisposable
         [PreserveSig] int GetChannelVolumeLevelScalar(uint channel, out float level);
         [PreserveSig] int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, ref Guid context);
         [PreserveSig] int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+    }
+}
+
+internal enum NetLevel { None, Local, SignIn, Internet }
+
+/// <summary>What the network icon shows: link type, how far it reaches, signal bars (0–5 for Wi-Fi) and its name.</summary>
+internal sealed record NetState(ConnectionKind Kind, NetLevel Level, int Bars, string? Name);
+
+/// <summary>Current connection as Windows sees it (the same source as the taskbar's network icon). Safe off the UI thread.</summary>
+internal static class NetworkStatus
+{
+    public static readonly NetState Disconnected = new(ConnectionKind.None, NetLevel.None, 0, null);
+
+    public static NetState Read()
+    {
+        try
+        {
+            // The profile carrying internet; otherwise a Wi-Fi network joined without internet (local virtual
+            // adapters always have "local access" and would otherwise hide a dropped connection).
+            var profile = NetworkInformation.GetInternetConnectionProfile();
+            if (profile is null || profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.None)
+            {
+                profile = NetworkInformation.GetConnectionProfiles()
+                    .FirstOrDefault(p => p.IsWlanConnectionProfile && p.GetNetworkConnectivityLevel() != NetworkConnectivityLevel.None);
+            }
+
+            if (profile is null)
+            {
+                return Disconnected;
+            }
+
+            var level = profile.GetNetworkConnectivityLevel() switch
+            {
+                NetworkConnectivityLevel.InternetAccess => NetLevel.Internet,
+                NetworkConnectivityLevel.ConstrainedInternetAccess => NetLevel.SignIn,
+                NetworkConnectivityLevel.LocalAccess => NetLevel.Local,
+                _ => NetLevel.None,
+            };
+            if (level == NetLevel.None)
+            {
+                return Disconnected;
+            }
+
+            bool wifi = profile.IsWlanConnectionProfile || profile.IsWwanConnectionProfile;
+            int bars = profile.GetSignalBars() is { } signal ? signal : wifi ? 5 : 0;
+            string? name = profile.IsWlanConnectionProfile ? profile.WlanConnectionProfileDetails?.GetConnectedSsid() : profile.ProfileName;
+            return new NetState(wifi ? ConnectionKind.Wifi : ConnectionKind.Ethernet, level, Math.Clamp(bars, 0, 5), name);
+        }
+        catch (Exception)
+        {
+            return Disconnected;
+        }
     }
 }

@@ -110,6 +110,7 @@ public partial class DockWindow : Window
         TrayGlyph.Text = WinKeys.Glyph(0xE70E);
 
         _services.Settings.Changed += OnSettingsChanged;
+        Windows.Networking.Connectivity.NetworkInformation.NetworkStatusChanged += OnNetworkStatusChanged;
         _services.Foreground.Changed += OnForegroundChanged;
         _services.Power.Changed += OnPowerChanged;
         _services.Weather.Updated += OnWeatherUpdated;
@@ -313,6 +314,7 @@ public partial class DockWindow : Window
         _liveTimer.Stop();
         _clockTimer.Stop();
         _services.Settings.Changed -= OnSettingsChanged;
+        Windows.Networking.Connectivity.NetworkInformation.NetworkStatusChanged -= OnNetworkStatusChanged;
         _services.Foreground.Changed -= OnForegroundChanged;
         _services.Power.Changed -= OnPowerChanged;
         _services.Weather.Updated -= OnWeatherUpdated;
@@ -683,14 +685,7 @@ public partial class DockWindow : Window
             UpText.Text = "↑ " + NetworkInfo.Format(_network.UpBytesPerSecond);
         }
 
-        NetworkGlyph.Text = _network.Connection == ConnectionKind.Ethernet ? "\uE839" : "\uE701";
-        NetworkGlyph.Opacity = _network.Connection == ConnectionKind.None ? 0.35 : 1;
-        NetworkCell.ToolTip = _network.Connection switch
-        {
-            ConnectionKind.Wifi => RadioControl.ConnectedNetworkName() is { } ssid ? $"{ssid}\nAkses internet" : "Wi-Fi tersambung",
-            ConnectionKind.Ethernet => "Ethernet tersambung",
-            _ => "Tidak ada koneksi",
-        };
+        _ = RefreshNetworkIconAsync();
 
         if (_volume.Read() is { } volume)
         {
@@ -705,6 +700,65 @@ public partial class DockWindow : Window
             VolumeGlyph.Text = "\uE767";
         }
     }
+
+    // ---- Network icon ------------------------------------------------------------------------------------------------
+
+    private bool _networkReading;
+
+    /// <summary>Reads the connection off the UI thread (Windows can take a moment) and redraws the icon.</summary>
+    private async Task RefreshNetworkIconAsync()
+    {
+        if (_networkReading)
+        {
+            return;
+        }
+
+        _networkReading = true;
+        try
+        {
+            ShowNetwork(await Task.Run(NetworkStatus.Read));
+        }
+        finally
+        {
+            _networkReading = false;
+        }
+    }
+
+    /// <summary>Windows' own states: bars by signal, a warning when there is no internet, a crossed globe when offline.</summary>
+    private void ShowNetwork(NetState state)
+    {
+        string quality = state.Bars switch { >= 4 => "sinyal sangat bagus", 3 => "sinyal bagus", 2 => "sinyal lemah", _ => "sinyal sangat lemah" };
+        int level = state.Bars switch { >= 4 => 3, 3 => 2, 2 => 1, _ => 0 };
+        string tip;
+        switch (state.Kind)
+        {
+            case ConnectionKind.Wifi:
+                NetworkBase.Text = WinKeys.Glyph(0xEC3F);
+                NetworkGlyph.Text = WinKeys.Glyph((state.Level == NetLevel.Internet ? 0xEC3C : 0xEB60) + level);
+                tip = (state.Name ?? "Wi-Fi") + "\n" + state.Level switch
+                {
+                    NetLevel.Internet => $"Akses internet · {quality}",
+                    NetLevel.SignIn => $"Perlu masuk (login) ke jaringan · {quality}",
+                    _ => $"Tidak ada internet · {quality}",
+                };
+                break;
+            case ConnectionKind.Ethernet:
+                NetworkBase.Text = "";
+                NetworkGlyph.Text = WinKeys.Glyph(0xE839);
+                tip = state.Level == NetLevel.Internet ? "Ethernet · akses internet" : "Ethernet · tidak ada internet";
+                break;
+            default:
+                NetworkBase.Text = "";
+                NetworkGlyph.Text = WinKeys.Glyph(0xF384);
+                tip = "Tidak terhubung ke jaringan";
+                break;
+        }
+
+        NetworkCell.ToolTip = tip;
+        AutomationProperties.SetName(NetworkCell, tip.Replace('\n', ' '));
+    }
+
+    private void OnNetworkStatusChanged(object? sender) => Dispatcher.BeginInvoke(() => _ = RefreshNetworkIconAsync());
 
     private void UpdateBattery()
     {

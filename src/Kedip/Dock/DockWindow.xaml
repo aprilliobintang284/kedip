@@ -50,8 +50,12 @@
                 <!-- Network, volume and battery share one hover plate (like the Windows tray); scroll to change the volume. -->
                 <Button x:Name="StatusButton" AutomationProperties.Name="Status" Style="{StaticResource DockButton}" Padding="7,0">
                     <StackPanel Orientation="Horizontal">
+                        <!-- Signal bars drawn over a faint full fan, as Windows draws them. -->
                         <Border x:Name="NetworkCell" Style="{StaticResource StatusCell}">
-                            <TextBlock x:Name="NetworkGlyph" Style="{StaticResource DockGlyph}" />
+                            <Grid Width="20">
+                                <TextBlock x:Name="NetworkBase" Style="{StaticResource DockGlyph}" Opacity="0.3" />
+                                <TextBlock x:Name="NetworkGlyph" Style="{StaticResource DockGlyph}" />
+                            </Grid>
                         </Border>
                         <Border x:Name="VolumeCell" Style="{StaticResource StatusCell}">
                             <TextBlock x:Name="VolumeGlyph" Style="{StaticResource DockGlyph}" />
