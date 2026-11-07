@@ -16,6 +16,8 @@ namespace Kedip.Mascot;
 /// </remarks>
 public sealed class EyesControl : FrameworkElement
 {
+    private static Brush EyeInk => (Brush)Application.Current.FindResource("DockTextBrush");
+
     private const double DrowsyOpenness = 0.45;
     private const double ClosedThreshold = 0.08;
     private const int WakeHappyMs = 450;
@@ -243,8 +245,8 @@ public sealed class EyesControl : FrameworkElement
         // The eye on the side we look towards turns slightly away (narrower): a hint of depth.
         double squeezeLeft = 1 - 0.08 * Math.Max(0, -lookX);
         double squeezeRight = 1 - 0.08 * Math.Max(0, lookX);
-        dc.DrawGeometry(Brushes.White, null, EyeGeometry(left, eyeW * squeezeLeft, eyeH, openness));
-        dc.DrawGeometry(Brushes.White, null, EyeGeometry(right, eyeW * squeezeRight, eyeH, openness));
+        dc.DrawGeometry(EyeInk, null, EyeGeometry(left, eyeW * squeezeLeft, eyeH, openness));
+        dc.DrawGeometry(EyeInk, null, EyeGeometry(right, eyeW * squeezeRight, eyeH, openness));
     }
 
     // ---- Activity / mood ----
@@ -669,7 +671,7 @@ public sealed class EyesControl : FrameworkElement
     {
         if (cache is null || Math.Abs(cache.Thickness - thickness) > 0.01)
         {
-            var pen = new Pen(Brushes.White, thickness)
+            var pen = new Pen(EyeInk, thickness)
             {
                 StartLineCap = PenLineCap.Round,
                 EndLineCap = PenLineCap.Round,

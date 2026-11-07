@@ -51,8 +51,8 @@ public partial class PrayerPanel : UserControl
         InitializeComponent();
 
         _accent = BrushResource("AccentBrush", Brushes.LimeGreen);
-        _primary = BrushResource("TextPrimaryBrush", Brushes.White);
-        _secondary = BrushResource("TextSecondaryBrush", Brushes.Gray);
+        _primary = BrushResource("DockTextBrush", Brushes.White);
+        _secondary = BrushResource("DockText2Brush", Brushes.Gray);
 
         _cityTipText = new TextBlock { FontSize = 11, LineHeight = 16, Foreground = _primary };
         CityChip.ToolTip = CreateToolTip(_cityTipText);

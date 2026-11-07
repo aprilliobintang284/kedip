@@ -10,13 +10,13 @@
         <!-- Left wing: album art or charging bolt -->
         <Grid x:Name="ArtFrame" HorizontalAlignment="Left" VerticalAlignment="Center"
               Opacity="0" Visibility="Collapsed">
-            <Border x:Name="ArtPlaceholder" Background="{StaticResource SurfaceBrush}">
+            <Border x:Name="ArtPlaceholder" Background="{StaticResource Ink1A}">
                 <TextBlock x:Name="ArtPlaceholderGlyph" FontFamily="{StaticResource IconFont}" Text="&#xEC4F;"
-                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Foreground="{StaticResource DockText2Brush}"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <Image x:Name="ArtImage" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
-            <Border x:Name="ArtRim" BorderBrush="#1FFFFFFF" BorderThickness="1" />
+            <Border x:Name="ArtRim" BorderBrush="{StaticResource Ink1F}" BorderThickness="1" />
         </Grid>
         <!-- Hand-drawn filled bolt: reads better than the outline icon at this size. -->
         <Path x:Name="BoltGlyph" Data="M7.6,0 L0.6,10.3 L5.5,10.3 L4.2,18 L11.4,7.4 L6.5,7.4 Z"
@@ -27,19 +27,19 @@
 
         <!-- Centre: clock, eyes or the current lyric line -->
         <TextBlock x:Name="ClockText" FontFamily="{StaticResource UiFont}" FontWeight="SemiBold"
-                   Foreground="{StaticResource TextPrimaryBrush}" Typography.NumeralAlignment="Tabular"
+                   Foreground="{StaticResource DockTextBrush}" Typography.NumeralAlignment="Tabular"
                    HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0" Visibility="Collapsed" />
         <Border x:Name="EyesHost" HorizontalAlignment="Center" VerticalAlignment="Center"
                 Opacity="0" Visibility="Collapsed" />
         <TextBlock x:Name="LyricA" FontFamily="{StaticResource UiFont}" FontWeight="Medium"
-                   Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" TextAlignment="Center"
+                   Foreground="{StaticResource DockTextBrush}" TextTrimming="CharacterEllipsis" TextAlignment="Center"
                    HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0" Visibility="Collapsed">
             <TextBlock.RenderTransform>
                 <TranslateTransform />
             </TextBlock.RenderTransform>
         </TextBlock>
         <TextBlock x:Name="LyricB" FontFamily="{StaticResource UiFont}" FontWeight="Medium"
-                   Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" TextAlignment="Center"
+                   Foreground="{StaticResource DockTextBrush}" TextTrimming="CharacterEllipsis" TextAlignment="Center"
                    HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0" Visibility="Collapsed">
             <TextBlock.RenderTransform>
                 <TranslateTransform />

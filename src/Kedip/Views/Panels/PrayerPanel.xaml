@@ -9,13 +9,13 @@
     <!-- Area: 440x150 DIP on black. Left: next prayer + countdown; right: today's schedule (2 x 4 grid). -->
     <UserControl.Resources>
         <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI</FontFamily>
-        <SolidColorBrush x:Key="TrackBrush" po:Freeze="True" Color="#1FFFFFFF" />
-        <SolidColorBrush x:Key="DividerBrush" po:Freeze="True" Color="#14FFFFFF" />
-        <SolidColorBrush x:Key="SoftTextBrush" po:Freeze="True" Color="#D9FFFFFF" />
+        <StaticResource x:Key="TrackBrush" ResourceKey="Ink1F" />
+        <StaticResource x:Key="DividerBrush" ResourceKey="Ink14" />
+        <StaticResource x:Key="SoftTextBrush" ResourceKey="InkD9" />
     </UserControl.Resources>
 
     <Grid TextElement.FontFamily="{StaticResource UiFont}"
-          TextElement.Foreground="{StaticResource TextPrimaryBrush}"
+          TextElement.Foreground="{StaticResource DockTextBrush}"
           TextOptions.TextFormattingMode="Display"
           Typography.NumeralAlignment="Tabular">
 
@@ -36,7 +36,7 @@
                     <TextBlock x:Name="NextGlyph" FontFamily="{StaticResource IconFont}" FontSize="12"
                                VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{StaticResource AccentBrush}" />
                     <TextBlock Text="Berikutnya" FontSize="11" VerticalAlignment="Center"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               Foreground="{StaticResource DockText2Brush}" />
                 </StackPanel>
 
                 <TextBlock x:Name="NextNameText" FontFamily="{StaticResource DisplayFont}" FontSize="28" FontWeight="SemiBold"
@@ -46,7 +46,7 @@
 
                 <TextBlock Height="20" LineStackingStrategy="BlockLineHeight" LineHeight="20" TextTrimming="CharacterEllipsis">
                     <Run x:Name="NextTimeRun" FontSize="15" FontWeight="SemiBold" /><Run
-                         x:Name="NextDayRun" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                         x:Name="NextDayRun" FontSize="12" Foreground="{StaticResource DockText2Brush}" />
                 </TextBlock>
 
                 <!-- Progress through the current prayer window (previous prayer to the next one). -->
@@ -79,9 +79,9 @@
                 <Border x:Name="CityChip" Grid.Row="3" Grid.Column="2" Height="26" Padding="8,0" Background="Transparent">
                     <DockPanel VerticalAlignment="Center">
                         <TextBlock Text="&#xE7B7;" DockPanel.Dock="Left" FontFamily="{StaticResource IconFont}" FontSize="11"
-                                   VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                                   VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{StaticResource DockText2Brush}" />
                         <TextBlock x:Name="CityText" FontSize="11" VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis" Foreground="{StaticResource TextSecondaryBrush}" />
+                                   TextTrimming="CharacterEllipsis" Foreground="{StaticResource DockText2Brush}" />
                     </DockPanel>
                 </Border>
             </Grid>
@@ -90,15 +90,15 @@
         <!-- Disabled / error state -->
         <StackPanel x:Name="MessagePanel" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Border Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Center"
-                    Background="{StaticResource SurfaceBrush}">
+                    Background="{StaticResource Ink1A}">
                 <TextBlock x:Name="MessageGlyph" Text="&#xE708;" FontFamily="{StaticResource IconFont}" FontSize="18"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="{StaticResource TextSecondaryBrush}" />
+                           Foreground="{StaticResource DockText2Brush}" />
             </Border>
             <TextBlock x:Name="MessageText" FontSize="13" FontWeight="SemiBold" Margin="0,12,0,0" MaxWidth="360"
                        TextAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{StaticResource SoftTextBrush}" />
             <TextBlock x:Name="MessageHint" FontSize="11" Margin="0,4,0,0" MaxWidth="360" TextAlignment="Center"
-                       TextTrimming="CharacterEllipsis" Foreground="{StaticResource TextSecondaryBrush}" />
+                       TextTrimming="CharacterEllipsis" Foreground="{StaticResource DockText2Brush}" />
         </StackPanel>
     </Grid>
 </UserControl>

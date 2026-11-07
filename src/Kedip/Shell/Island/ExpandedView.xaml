@@ -4,14 +4,14 @@
              xmlns:island="clr-namespace:Kedip.Shell.Island"
              Width="460" Height="190" Focusable="False" IsTabStop="False" SnapsToDevicePixels="True"
              Opacity="0" Visibility="Collapsed" RenderTransformOrigin="0.5,0"
-             FontFamily="{StaticResource UiFont}" Foreground="{StaticResource TextPrimaryBrush}">
+             FontFamily="{StaticResource UiFont}" Foreground="{StaticResource DockTextBrush}">
     <UserControl.RenderTransform>
         <ScaleTransform x:Name="Zoom" />
     </UserControl.RenderTransform>
 
     <UserControl.Resources>
         <Style TargetType="ToolTip">
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource DockTextBrush}" />
             <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="HasDropShadow" Value="False" />
@@ -20,7 +20,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
-                        <Border Background="#F2202022" BorderBrush="#1FFFFFFF" BorderThickness="1" CornerRadius="6"
+                        <Border Background="{StaticResource DockMenu}" BorderBrush="{StaticResource Ink1F}" BorderThickness="1" CornerRadius="6"
                                 Padding="8,4" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display">
                             <ContentPresenter />
                         </Border>
@@ -41,7 +41,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid Background="Transparent">
-                            <Border x:Name="HoverFill" CornerRadius="13" Background="#14FFFFFF" Opacity="0" />
+                            <Border x:Name="HoverFill" CornerRadius="13" Background="{StaticResource Ink14}" Opacity="0" />
                             <ContentPresenter x:Name="Glyph" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -85,7 +85,7 @@
               RenderOptions.ClearTypeHint="Enabled">
             <Canvas x:Name="TabTrack" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,6,0,0"
                     IsHitTestVisible="False">
-                <Border x:Name="TabIndicator" Width="36" Height="26" CornerRadius="13" Background="#26FFFFFF"
+                <Border x:Name="TabIndicator" Width="36" Height="26" CornerRadius="13" Background="{StaticResource Ink26}"
                         Opacity="0">
                     <Border.RenderTransform>
                         <TranslateTransform x:Name="IndicatorShift" />
@@ -121,7 +121,7 @@
         <Grid x:Name="DropHint" Grid.Row="1" Width="440" Height="150" HorizontalAlignment="Center"
               IsHitTestVisible="False" Opacity="0" Visibility="Collapsed"
               TextOptions.TextFormattingMode="Display">
-            <Rectangle RadiusX="16" RadiusY="16" Fill="#E6000000" Stroke="#59FFFFFF" StrokeThickness="1.25"
+            <Rectangle RadiusX="16" RadiusY="16" Fill="{StaticResource DockMenu}" Stroke="{StaticResource Ink59}" StrokeThickness="1.25"
                        StrokeDashArray="4 3" StrokeDashCap="Round" Margin="0.5" />
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Border Width="40" Height="40" CornerRadius="20" Background="#2934C759" HorizontalAlignment="Center">
@@ -132,7 +132,7 @@
                 <TextBlock Text="Lepas di sini buat simpan ke Shelf" FontSize="13" FontWeight="SemiBold"
                            HorizontalAlignment="Center" Margin="0,12,0,0" />
                 <TextBlock Text="File aslinya tetap di tempatnya, kok" FontSize="11.5"
-                           Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                           Foreground="{StaticResource DockText2Brush}" HorizontalAlignment="Center" Margin="0,2,0,0" />
             </StackPanel>
         </Grid>
     </Grid>

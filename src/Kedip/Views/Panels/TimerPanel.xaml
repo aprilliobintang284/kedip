@@ -6,7 +6,7 @@
              mc:Ignorable="d"
              d:DesignWidth="440" d:DesignHeight="150"
              FontFamily="{StaticResource UiFont}"
-             Foreground="{StaticResource TextPrimaryBrush}"
+             Foreground="{StaticResource DockTextBrush}"
              Background="Transparent"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True"
@@ -21,7 +21,7 @@
             <Style x:Key="BigNumber" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
                 <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource DockTextBrush}" />
                 <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
                 <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
                 <Setter Property="VerticalAlignment" Value="Center" />
@@ -68,7 +68,7 @@
                     <TextBlock x:Name="SessionCountText" DockPanel.Dock="Right" Style="{StaticResource SmallText}" Margin="8,0,0,0"
                                Visibility="Collapsed" Typography.NumeralAlignment="Tabular" />
                     <TextBlock x:Name="PhaseGlyph" DockPanel.Dock="Left" Style="{StaticResource GlyphText}" Margin="0,0,6,0"
-                               Foreground="{StaticResource TextSecondaryBrush}" Text="&#xE916;" />
+                               Foreground="{StaticResource DockText2Brush}" Text="&#xE916;" />
                     <TextBlock x:Name="PhaseText" Style="{StaticResource HeaderText}" Text="Siap" />
                 </DockPanel>
 
@@ -124,7 +124,7 @@
 
                 <TextBlock Grid.Row="1" Style="{StaticResource BigNumber}" Margin="-1,4,0,0" LineHeight="36">
                     <Run x:Name="WaterAmountRun" FontSize="26" Text="0" /><Run x:Name="WaterGoalRun" FontFamily="{StaticResource UiFont}"
-                         FontSize="12" FontWeight="Normal" Foreground="{StaticResource TextSecondaryBrush}" Text=" / 2.000 ml" />
+                         FontSize="12" FontWeight="Normal" Foreground="{StaticResource DockText2Brush}" Text=" / 2.000 ml" />
                 </TextBlock>
 
                 <Grid x:Name="WaterTrack" Grid.Row="2" Margin="0,6,0,0">

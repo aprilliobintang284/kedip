@@ -71,7 +71,7 @@ public partial class WeatherPanel : UserControl
             Text = now ? "Kini" : hour.Time.ToString("HH.mm", Indonesian),
             FontSize = 11,
             FontWeight = now ? FontWeights.SemiBold : FontWeights.Normal,
-            Foreground = (Brush)FindResource(now ? "TextPrimaryBrush" : "TextSecondaryBrush"),
+            Foreground = (Brush)FindResource(now ? "DockTextBrush" : "DockText2Brush"),
             HorizontalAlignment = HorizontalAlignment.Center,
         });
         stack.Children.Add(new TextBlock

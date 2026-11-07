@@ -15,6 +15,7 @@ internal static class DockPalette
     private static readonly byte[] InkAlphas =
     [
         0x0A, 0x0D, 0x0F, 0x10, 0x12, 0x14, 0x16, 0x17, 0x1A, 0x1C, 0x1F, 0x22, 0x24, 0x26, 0x28, 0x2E, 0x38, 0x40, 0x4A, 0x4D, 0x99, 0xB3, 0xD9,
+        0x05, 0x08, 0x0B, 0x47, 0x59, 0x61, 0x66, 0x33, 0x8C, 0xEB, 0xF2, 0xFF,
     ];
 
     private static readonly TimeSpan Fade = TimeSpan.FromMilliseconds(320);
@@ -23,7 +24,7 @@ internal static class DockPalette
     private static readonly Dictionary<byte, Slot> Ink = new();
     private static readonly Dictionary<byte, Brush> InkBrushes = new();
     private static Slot _text = null!, _text2 = null!, _menu = null!, _menuEdge = null!, _hover = null!, _press = null!,
-        _line = null!, _card = null!, _cardEdge = null!, _knob = null!;
+        _line = null!, _card = null!, _cardEdge = null!, _knob = null!, _notch = null!;
     private static Slot[] _surface = null!, _panel = null!, _edge = null!, _tile = null!, _tileActive = null!, _tileEdge = null!;
 
     /// <summary>
@@ -77,6 +78,7 @@ internal static class DockPalette
         _card = Solid(res, "PanelCard");
         _cardEdge = Solid(res, "PanelCardEdge");
         _knob = Solid(res, "DockKnob");
+        _notch = Solid(res, "NotchBrush");
         _surface = Gradient(res, "DockSurface");
         _panel = Gradient(res, "PanelSurface");
         _edge = Gradient(res, "DockEdge", 3);
@@ -116,20 +118,27 @@ internal static class DockPalette
         To(_line, InkColor(light, light ? (byte)0x1A : (byte)0x1C), animate);
         To(_card, light ? Rgb(0xA6, 0xFF, 0xFF, 0xFF) : Rgb(0x14, 0xFF, 0xFF, 0xFF), animate);
         To(_cardEdge, InkColor(light, light ? (byte)0x14 : (byte)0x10), animate);
+        To(_notch, (glass, light) switch
+        {
+            (true, false) => Rgb(0xE0, 0x04, 0x04, 0x05),
+            (true, true) => Rgb(0xDC, 0xF6, 0xF6, 0xF8),
+            (false, false) => Rgb(0xFF, 0x00, 0x00, 0x00),
+            _ => Rgb(0xFF, 0xF6, 0xF6, 0xF8),
+        }, animate);
         To(_knob, light ? Rgb(0xFF, 0xE4, 0xE4, 0xE8) : Rgb(0xFF, 0x3A, 0x3A, 0x3D), animate);
 
         // Surfaces: translucent (the blur behind shows through) for the glass looks, opaque otherwise.
         (Color a, Color b) dock = (glass, light) switch
         {
-            (true, false) => (Rgb(0x8C, 0x0F, 0x0F, 0x12), Rgb(0xAC, 0x06, 0x06, 0x07)),
-            (true, true) => (Rgb(0xB8, 0xF6, 0xF6, 0xF8), Rgb(0xCC, 0xED, 0xED, 0xF1)),
+            (true, false) => (Rgb(0x5C, 0x0F, 0x0F, 0x12), Rgb(0x78, 0x06, 0x06, 0x07)),
+            (true, true) => (Rgb(0x8A, 0xF6, 0xF6, 0xF8), Rgb(0xA6, 0xED, 0xED, 0xF1)),
             (false, false) => (Rgb(0xFF, 0x1A, 0x1A, 0x1F), Rgb(0xFF, 0x0F, 0x0F, 0x12)),
             _ => (Rgb(0xFF, 0xF8, 0xF8, 0xFA), Rgb(0xFF, 0xEC, 0xEC, 0xF0)),
         };
         (Color a, Color b) panel = (glass, light) switch
         {
-            (true, false) => (Rgb(0xA8, 0x0E, 0x0E, 0x11), Rgb(0xC4, 0x06, 0x06, 0x07)),
-            (true, true) => (Rgb(0xD2, 0xF8, 0xF8, 0xFA), Rgb(0xE0, 0xEE, 0xEE, 0xF2)),
+            (true, false) => (Rgb(0x80, 0x0E, 0x0E, 0x11), Rgb(0x99, 0x06, 0x06, 0x07)),
+            (true, true) => (Rgb(0xA6, 0xF8, 0xF8, 0xFA), Rgb(0xBC, 0xEE, 0xEE, 0xF2)),
             (false, false) => (Rgb(0xFF, 0x17, 0x17, 0x1B), Rgb(0xFF, 0x0E, 0x0E, 0x11)),
             _ => (Rgb(0xFF, 0xFA, 0xFA, 0xFC), Rgb(0xFF, 0xF0, 0xF0, 0xF4)),
         };

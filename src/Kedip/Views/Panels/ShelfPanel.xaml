@@ -8,7 +8,7 @@
              mc:Ignorable="d po"
              d:DesignWidth="440" d:DesignHeight="150"
              FontFamily="{StaticResource UiFont}"
-             Foreground="{StaticResource TextPrimaryBrush}"
+             Foreground="{StaticResource DockTextBrush}"
              Background="Transparent"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True"
@@ -22,14 +22,14 @@
 
             <SolidColorBrush x:Key="BadgeBrush" Color="#FF3A3A3C" po:Freeze="True" />
             <SolidColorBrush x:Key="BadgeHoverBrush" Color="#FF5C5C60" po:Freeze="True" />
-            <SolidColorBrush x:Key="DropZoneBrush" Color="#33FFFFFF" po:Freeze="True" />
+            <StaticResource x:Key="DropZoneBrush" ResourceKey="Ink33" />
 
             <!-- Small "x" badge in a tile's corner; black ring separates it from the icon. -->
             <Style x:Key="RemoveBadge" TargetType="Button">
                 <Setter Property="Focusable" Value="False" />
                 <Setter Property="Width" Value="18" />
                 <Setter Property="Height" Value="18" />
-                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource DockTextBrush}" />
                 <Setter Property="Background" Value="{StaticResource BadgeBrush}" />
                 <Setter Property="ToolTipService.InitialShowDelay" Value="700" />
                 <Setter Property="Template">
@@ -62,7 +62,7 @@
                     <StackPanel Margin="2,12,2,6">
                         <Grid Width="32" Height="32" HorizontalAlignment="Center">
                             <TextBlock x:Name="Placeholder" Text="&#xE8A5;" FontFamily="{StaticResource IconFont}" FontSize="26"
-                                       Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed"
+                                       Foreground="{StaticResource DockText2Brush}" Visibility="Collapsed"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <Image x:Name="IconImage" Source="{Binding Icon, NotifyOnTargetUpdated=True}" Width="32" Height="32"
                                    Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality">
@@ -141,7 +141,7 @@
 
         <DockPanel Grid.Row="0" Height="24" Margin="6,0,0,4" LastChildFill="False">
             <TextBlock DockPanel.Dock="Left" Style="{StaticResource GlyphText}" Margin="0,0,7,0"
-                       Foreground="{StaticResource TextSecondaryBrush}" Text="&#xE7B8;" />
+                       Foreground="{StaticResource DockText2Brush}" Text="&#xE7B8;" />
             <TextBlock DockPanel.Dock="Left" Style="{StaticResource HeaderText}" Text="Shelf" />
             <TextBlock x:Name="CountText" DockPanel.Dock="Left" Style="{StaticResource SmallText}" Margin="8,0,0,0"
                        Foreground="{StaticResource TextTertiaryBrush}" Typography.NumeralAlignment="Tabular" />

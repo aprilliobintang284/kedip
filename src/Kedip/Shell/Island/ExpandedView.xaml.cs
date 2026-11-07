@@ -193,7 +193,7 @@ public partial class ExpandedView : UserControl
                 Text = glyph,
                 FontFamily = (FontFamily)FindResource("IconFont"),
                 FontSize = 14,
-                Foreground = (Brush)FindResource("TextPrimaryBrush"),
+                Foreground = (Brush)FindResource("DockTextBrush"),
                 Opacity = 0.5,
             },
         };
@@ -231,7 +231,7 @@ public partial class ExpandedView : UserControl
             panel = new TextBlock
             {
                 Text = "Panel ini lagi nggak bisa dibuka",
-                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                Foreground = (Brush)FindResource("DockText2Brush"),
                 FontSize = 12,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,

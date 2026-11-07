@@ -50,7 +50,7 @@ public partial class TimerPanel : UserControl
         _breakBrush = (Brush)FindResource("BreakBrush");
         _breakTintBrush = (Brush)FindResource("BreakTintBrush");
         _waterBrush = (Brush)FindResource("WaterBrush");
-        _secondaryBrush = (Brush)FindResource("TextSecondaryBrush");
+        _secondaryBrush = (Brush)FindResource("DockText2Brush");
         _dotEmptyBrush = (Brush)FindResource("TrackBrush");
 
         TimerTrack.SizeChanged += (_, _) => SetBarNow(TimerFill, TimerTrack, _timerFraction);

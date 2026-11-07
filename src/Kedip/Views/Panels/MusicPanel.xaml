@@ -11,16 +11,16 @@
              TextOptions.TextFormattingMode="Display"
              RenderOptions.ClearTypeHint="Enabled"
              FontFamily="{StaticResource UiFont}"
-             Foreground="{StaticResource TextPrimaryBrush}">
+             Foreground="{StaticResource DockTextBrush}">
     <!-- Area: 440x150 DIP on black. 8-DIP grid; radii: art 10, pills/circles fully round. -->
     <UserControl.Resources>
-        <SolidColorBrush x:Key="LyricBrush" Color="#F2FFFFFF" po:Freeze="True" />
-        <SolidColorBrush x:Key="TertiaryBrush" Color="#66FFFFFF" po:Freeze="True" />
-        <SolidColorBrush x:Key="QuaternaryBrush" Color="#47FFFFFF" po:Freeze="True" />
-        <SolidColorBrush x:Key="TimeBrush" Color="#8CFFFFFF" po:Freeze="True" />
-        <SolidColorBrush x:Key="TrackBrush" Color="#2EFFFFFF" po:Freeze="True" />
-        <SolidColorBrush x:Key="FillBrush" Color="#F2FFFFFF" po:Freeze="True" />
-        <SolidColorBrush x:Key="HairlineBrush" Color="#17FFFFFF" po:Freeze="True" />
+        <StaticResource x:Key="LyricBrush" ResourceKey="InkF2" />
+        <StaticResource x:Key="TertiaryBrush" ResourceKey="Ink66" />
+        <StaticResource x:Key="QuaternaryBrush" ResourceKey="Ink47" />
+        <StaticResource x:Key="TimeBrush" ResourceKey="Ink8C" />
+        <StaticResource x:Key="TrackBrush" ResourceKey="Ink2E" />
+        <StaticResource x:Key="FillBrush" ResourceKey="InkF2" />
+        <StaticResource x:Key="HairlineBrush" ResourceKey="Ink17" />
         <FontFamily x:Key="SmallFont">Segoe UI Variable Small, Segoe UI</FontFamily>
 
         <Style x:Key="TransportButton" TargetType="Button">
@@ -30,7 +30,7 @@
             <Setter Property="Height" Value="32" />
             <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource DockTextBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -38,7 +38,7 @@
                             <Grid.RenderTransform>
                                 <ScaleTransform x:Name="PressScale" />
                             </Grid.RenderTransform>
-                            <Ellipse x:Name="Hover" Fill="#FFFFFFFF" Opacity="0" />
+                            <Ellipse x:Name="Hover" Fill="{StaticResource InkFF}" Opacity="0" />
                             <ContentPresenter x:Name="Glyph" HorizontalAlignment="Center" VerticalAlignment="Center"
                                               Margin="{TemplateBinding Padding}" RecognizesAccessKey="False" />
                         </Grid>
@@ -153,7 +153,7 @@
                     <TextBlock x:Name="TitleText" FontSize="15" FontWeight="SemiBold"
                                TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
                                LineHeight="20" LineStackingStrategy="BlockLineHeight" />
-                    <TextBlock x:Name="ArtistText" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                    <TextBlock x:Name="ArtistText" FontSize="12" Foreground="{StaticResource DockText2Brush}"
                                TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="0,1,0,0"
                                LineHeight="16" LineStackingStrategy="BlockLineHeight" />
                 </StackPanel>
@@ -200,7 +200,7 @@
                             Background="{StaticResource TrackBrush}" />
                     <Border x:Name="SeekFill" Height="4" CornerRadius="3" Width="0" VerticalAlignment="Center"
                             HorizontalAlignment="Left" Background="{StaticResource FillBrush}" />
-                    <Ellipse x:Name="SeekKnob" Width="10" Height="10" Fill="{StaticResource TextPrimaryBrush}"
+                    <Ellipse x:Name="SeekKnob" Width="10" Height="10" Fill="{StaticResource DockTextBrush}"
                              HorizontalAlignment="Left" VerticalAlignment="Center" Opacity="0" IsHitTestVisible="False">
                         <Ellipse.RenderTransform>
                             <TranslateTransform x:Name="KnobShift" />
@@ -229,9 +229,9 @@
         <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Opacity="0" Visibility="Collapsed" IsHitTestVisible="False">
             <Grid Width="48" Height="48" HorizontalAlignment="Center">
-                <Ellipse Fill="{StaticResource SurfaceBrush}" />
+                <Ellipse Fill="{StaticResource Ink1A}" />
                 <TextBlock x:Name="EmptyGlyph" Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" FontSize="20"
-                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Foreground="{StaticResource DockText2Brush}"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Grid>
             <TextBlock x:Name="EmptyTitle" Text="Tidak ada musik yang diputar" FontSize="13" FontWeight="SemiBold"

@@ -28,9 +28,9 @@
         </Grid>
         <StackPanel x:Name="TextStack" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
             <TextBlock x:Name="TitleText" FontFamily="{StaticResource UiFont}" FontSize="13" FontWeight="SemiBold"
-                       Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                       Foreground="{StaticResource DockTextBrush}" TextTrimming="CharacterEllipsis" />
             <TextBlock x:Name="SubtitleText" FontFamily="{StaticResource UiFont}" FontSize="11.5"
-                       Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
+                       Foreground="{StaticResource DockText2Brush}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
         </StackPanel>
     </Grid>
 </UserControl>
