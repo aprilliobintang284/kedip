@@ -170,16 +170,9 @@ public partial class DockWindow : Window
     }
 
     /// <summary>Only the capsule is window (blur, clicks): its round ends leave the corners to the desktop.</summary>
+    // The window is transparent and the capsule draws its own shape: nothing to cut.
     private void ApplyShape()
     {
-        if (_hwnd == IntPtr.Zero || ActualWidth <= 0)
-        {
-            return;
-        }
-
-        var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
-        var bounds = Bar.TransformToAncestor(this).TransformBounds(new Rect(Bar.RenderSize));
-        Glass.Shape(_hwnd, [Rect.Transform(bounds, toDevice)], Bar.ActualHeight / 2 * toDevice.M22);
     }
 
     // ---- "Gantikan taskbar" --------------------------------------------------------------------------------------

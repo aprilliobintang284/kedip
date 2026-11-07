@@ -32,6 +32,7 @@ public class GlassPanel : Window
     public GlassPanel()
     {
         WindowStyle = WindowStyle.None;
+        AllowsTransparency = true;
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
         Topmost = true;
@@ -107,24 +108,9 @@ public class GlassPanel : Window
         ApplyShape();
     }
 
+    // The window is transparent and the content draws its own rounded shape: nothing to cut.
     private void ApplyShape()
     {
-        IntPtr hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero || ActualWidth <= 0)
-        {
-            return;
-        }
-
-        var toDevice = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
-        double w = ActualWidth * toDevice.M11;
-        double h = ActualHeight * toDevice.M22;
-        double p = Math.Clamp(Reveal, 0, 1);
-        double s = 0.9 + 0.1 * p;
-        // The same scale (about the bottom centre) and slide as the content, so the blur follows the glass.
-        double sw = w * s, sh = h * s;
-        double top = h - sh + (1 - p) * 16 * toDevice.M22;
-        var rect = new Rect((w - sw) / 2, Math.Min(top, h - 2), sw, Math.Max(2, Math.Min(sh, h - top)));
-        Glass.Shape(hwnd, [rect], Radius * s * toDevice.M22);
     }
 
     /// <summary>

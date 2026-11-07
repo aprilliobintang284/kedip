@@ -13,7 +13,23 @@ namespace Kedip.DockBar;
 /// </summary>
 internal static class Glass
 {
+    /// <summary>
+    /// For the dock and the panels: a plain per-pixel-transparent window (AllowsTransparency), so the rounded shape is
+    /// drawn by WPF itself with smooth edges and nothing is cut, blurred or framed by the system around it.
+    /// </summary>
     public static void Apply(IntPtr hwnd, bool noActivate)
+    {
+        long ex = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE).ToInt64() | NativeMethods.WS_EX_TOOLWINDOW;
+        if (noActivate)
+        {
+            ex |= NativeMethods.WS_EX_NOACTIVATE;
+        }
+
+        NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, new IntPtr(ex));
+    }
+
+    /// <summary>Old route, still used by the window preview (it needs the system's thumbnails): system blur plus a region cut.</summary>
+    public static void ApplyBlurred(IntPtr hwnd, bool noActivate)
     {
         HwndSource.FromHwnd(hwnd).CompositionTarget.BackgroundColor = Colors.Transparent;
 

@@ -58,7 +58,7 @@ internal sealed class WindowPreview : Window
         SourceInitialized += (_, _) =>
         {
             _hwnd = new WindowInteropHelper(this).Handle;
-            Glass.Apply(_hwnd, noActivate: true);
+            Glass.ApplyBlurred(_hwnd, noActivate: true);
             HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
         };
         SizeChanged += (_, _) =>
