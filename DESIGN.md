@@ -1,7 +1,6 @@
 # Kedip — design spec (v0.1)
 
 A lightweight Windows notch at the top of the screen, written from scratch in C# / WPF (.NET 10).
-Behaviour is *inspired by* Nusa and Intip; **no code, artwork, icons, characters or text is copied from either app.**
 All visuals (notch shape, eyes, icons) are drawn by our own code.
 
 Target machine: Windows 11, single 1920×1080 monitor at 125% scale (120 DPI), laptop (battery present).
@@ -16,7 +15,7 @@ Target machine: Windows 11, single 1920×1080 monitor at 125% scale (120 DPI), l
    - An app is foreground → clock; eyes appear after `EyesIdleSeconds` (default 15) with no mouse/keyboard input.
    - Long idle → drowsy (`DrowsyAfterMinutes`, default 3) → asleep (`SleepAfterMinutes`, default 10).
    - Input returns → short "hello" (wake) animation; then hidden again if an app is foreground.
-3. **Adjustable notch size** (default ≈ Nusa: 166×30 DIP). Presets Small 120×28, Medium 166×30, Large 200×32, or Custom.
+3. **Adjustable notch size** (default 166×30 DIP). Presets Small 120×28, Medium 166×30, Large 200×32, or Custom.
 4. Features: clock, music (Windows media session) + **synced lyrics** (LRCLIB), battery/charger, pomodoro timer,
    water reminder, file shelf, **Islamic prayer times** (Kemenag RI parameters), tray menu, settings window, start with Windows.
 
