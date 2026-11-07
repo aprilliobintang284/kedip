@@ -50,9 +50,11 @@ internal static class Glass
     public static void Shape(IntPtr hwnd, IReadOnlyList<Rect> rects, double radius)
     {
         IntPtr combined = CreateRectRgn(0, 0, 0, 0);
-        int diameter = Math.Max(0, (int)Math.Round((radius + 1.0) * 2));
         foreach (var r in rects)
         {
+            // The corner ellipse can never be larger than the rectangle (a pill ends in a half circle): GDI turns an
+            // oversized one into a squared-off shape.
+            int diameter = (int)Math.Min(Math.Round((radius + 1.0) * 2), Math.Min(Math.Round(r.Width), Math.Round(r.Height)) + 1);
             IntPtr part = CreateRoundRectRgn((int)Math.Round(r.Left), (int)Math.Round(r.Top), (int)Math.Round(r.Right) + 1,
                 (int)Math.Round(r.Bottom) + 1, diameter, diameter);
             CombineRgn(combined, combined, part, RGN_OR);

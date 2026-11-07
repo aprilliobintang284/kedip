@@ -78,6 +78,13 @@
                         </s:SettingRow>
                     </Border>
 
+                    <Border Style="{StaticResource SCard}">
+                        <s:SettingRow Header="Warna" Stacked="True"
+                                          Description="Gelap atau terang, polos atau kaca bening (glassmorphism). Berlaku untuk notch, dock, panel, dan menunya.">
+                                <s:SegmentedControl x:Name="LookSegments" Segments="Gelap kaca|Terang kaca|Gelap|Terang" />
+                            </s:SettingRow>
+                    </Border>
+
                     <Border Style="{StaticResource SCard}" Padding="6">
                         <s:NotchPreview x:Name="Preview" Height="112" />
                     </Border>
@@ -147,11 +154,6 @@
 
                     <Border Style="{StaticResource SCard}">
                         <StackPanel>
-                            <s:SettingRow Header="Warna" Stacked="True"
-                                          Description="Gelap atau terang, polos atau kaca transparan. Berlaku untuk dock, panel, dan menunya.">
-                                <s:SegmentedControl x:Name="LookSegments" Segments="Gelap kaca|Terang kaca|Gelap|Terang" />
-                            </s:SettingRow>
-                            <Border Style="{StaticResource SDivider}" />
                             <s:SettingRow Header="Sembunyi otomatis" Stacked="True"
                                           Description="Pintar: dock turun saat tertutup jendela, arahkan kursor ke garis di bawah untuk memunculkannya.">
                                 <s:SegmentedControl x:Name="DockHideSegments" Segments="Pintar|Selalu tampil" />
