@@ -18,6 +18,9 @@ public enum ShowMode { NotchOnly, DockOnly, Both }
 /// <summary>Smart: the dock slides away while a window covers it. Never: always visible.</summary>
 public enum DockHide { Smart, Never }
 
+/// <summary>Colour of the dock, its panels and menus: dark or light, each solid or as translucent glass.</summary>
+public enum DockLook { DarkGlass, LightGlass, Dark, Light }
+
 /// <summary>User settings, persisted as JSON. Sizes are in DIPs.</summary>
 public sealed class AppSettings
 {
@@ -61,6 +64,8 @@ public sealed class AppSettings
 
     // Dock
     public ShowMode Show { get; set; } = ShowMode.NotchOnly;
+    public DockLook Look { get; set; } = DockLook.DarkGlass;
+
     public DockHide DockAutoHide { get; set; } = DockHide.Smart;
 
     /// <summary>Hide the Windows taskbar and use the dock instead (a dock button brings the taskbar back on demand).</summary>

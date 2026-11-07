@@ -5,7 +5,7 @@
         WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="False"
         SizeToContent="WidthAndHeight" WindowStartupLocation="Manual" Background="Transparent"
         UseLayoutRounding="True" SnapsToDevicePixels="True" Focusable="False"
-        FontFamily="{StaticResource UiFont}" Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}" Foreground="{StaticResource DockTextBrush}"
         TextOptions.TextFormattingMode="Display" RenderOptions.ClearTypeHint="Enabled">
     <Window.Resources>
         <ResourceDictionary>
@@ -73,7 +73,7 @@
                 <StackPanel x:Name="NetSpeedPanel" VerticalAlignment="Center" Margin="8,0,6,0">
                     <TextBlock x:Name="DownText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular" />
                     <TextBlock x:Name="UpText" FontSize="10.5" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               Foreground="{StaticResource DockText2Brush}" />
                 </StackPanel>
 
                 <StackPanel x:Name="WeatherPanel" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
@@ -96,7 +96,7 @@
                 </Button>
 
                 <Button x:Name="DesktopButton" AutomationProperties.Name="Desktop" Style="{StaticResource DockButton}" MinWidth="36" ToolTip="Tampilkan desktop">
-                    <Border Width="16" Height="12" BorderBrush="White" BorderThickness="1.5" CornerRadius="3" Opacity="0.85" />
+                    <Border Width="16" Height="12" BorderBrush="{DynamicResource DockTextBrush}" BorderThickness="1.5" CornerRadius="3" Opacity="0.85" />
                 </Button>
         </StackPanel>
     </Border>

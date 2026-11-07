@@ -436,7 +436,7 @@ public partial class ControlPanelWindow
         Text = text,
         FontSize = 11.5,
         TextWrapping = TextWrapping.Wrap,
-        Foreground = (Brush)FindResource("TextSecondaryBrush"),
+        Foreground = (Brush)FindResource("DockText2Brush"),
         Margin = new Thickness(0, 0, 0, 8),
     };
 

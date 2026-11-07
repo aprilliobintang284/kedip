@@ -20,7 +20,7 @@
             <StackPanel x:Name="EmptyNotifications" Margin="0,2,0,16" Visibility="Collapsed" HorizontalAlignment="Center">
                 <TextBlock x:Name="EmptyGlyph" FontFamily="{StaticResource IconFont}" FontSize="22" HorizontalAlignment="Center" Opacity="0.5" />
                 <TextBlock x:Name="EmptyText" Margin="0,8,0,0" FontSize="12.5" HorizontalAlignment="Center"
-                           Foreground="{StaticResource TextSecondaryBrush}" Text="Tidak ada notifikasi baru" />
+                           Foreground="{StaticResource DockText2Brush}" Text="Tidak ada notifikasi baru" />
             </StackPanel>
 
             <Border Height="1" Background="{StaticResource DockLine}" />
@@ -29,7 +29,7 @@
             <Grid Margin="18,12,12,2">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock x:Name="DateTitle" FontSize="14" FontWeight="SemiBold" />
-                    <TextBlock x:Name="HijriText" Margin="0,2,0,0" FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="HijriText" Margin="0,2,0,0" FontSize="11.5" Foreground="{StaticResource DockText2Brush}" />
                 </StackPanel>
                 <Button x:Name="CollapseButton" Style="{StaticResource RoundIconButton}" HorizontalAlignment="Right" FontSize="11"
                         AutomationProperties.Name="Ciutkan kalender" />
@@ -49,7 +49,7 @@
             </StackPanel>
 
             <!-- Focus timer (Kedip's pomodoro). -->
-            <Border Padding="14,10" Background="#0AFFFFFF" BorderBrush="{StaticResource DockLine}" BorderThickness="0,1,0,0" CornerRadius="0,0,19,19">
+            <Border Padding="14,10" Background="{StaticResource Ink0A}" BorderBrush="{StaticResource DockLine}" BorderThickness="0,1,0,0" CornerRadius="0,0,19,19">
                 <Grid>
                     <StackPanel x:Name="FocusSetup" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="LessButton" Style="{StaticResource RoundIconButton}" FontSize="12" AutomationProperties.Name="Kurangi waktu fokus" />
@@ -58,7 +58,7 @@
                         <Button x:Name="MoreButton" Style="{StaticResource RoundIconButton}" FontSize="12" AutomationProperties.Name="Tambah waktu fokus" />
                     </StackPanel>
                     <StackPanel x:Name="FocusRunning" Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0" Visibility="Collapsed">
-                        <TextBlock x:Name="FocusPhaseText" FontSize="12.5" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <TextBlock x:Name="FocusPhaseText" FontSize="12.5" VerticalAlignment="Center" Foreground="{StaticResource DockText2Brush}" />
                         <TextBlock x:Name="FocusTimeText" Margin="8,0,0,0" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"
                                    Typography.NumeralAlignment="Tabular" />
                     </StackPanel>

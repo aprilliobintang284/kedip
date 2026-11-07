@@ -49,7 +49,7 @@
                     </Grid>
                 </StackPanel>
 
-                <Border Margin="0,14,0,0" Padding="12,6" Background="#0AFFFFFF" BorderBrush="{StaticResource DockLine}" BorderThickness="0,1,0,0"
+                <Border Margin="0,14,0,0" Padding="12,6" Background="{StaticResource Ink0A}" BorderBrush="{StaticResource DockLine}" BorderThickness="0,1,0,0"
                         CornerRadius="0,0,19,19">
                     <Grid>
                         <Button x:Name="BatteryButton" Style="{StaticResource PanelLink}" HorizontalAlignment="Left" ToolTip="Pengaturan baterai">
@@ -78,13 +78,13 @@
                     </StackPanel>
                     <ToggleButton x:Name="DetailSwitch" Style="{StaticResource PanelSwitch}" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 </Grid>
-                <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="8,4" Background="#0AFFFFFF" BorderBrush="{StaticResource DockLine}"
+                <Border DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="8,4" Background="{StaticResource Ink0A}" BorderBrush="{StaticResource DockLine}"
                         BorderThickness="0,1,0,0" CornerRadius="0,0,19,19">
                     <Button x:Name="DetailMore" Style="{StaticResource PanelLink}" />
                 </Border>
                 <StackPanel>
                     <TextBlock x:Name="DetailStatus" Margin="18,0,18,6" FontSize="12" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               Foreground="{StaticResource DockText2Brush}" />
                     <ScrollViewer x:Name="DetailScroll" MaxHeight="330" Margin="8,0" VerticalScrollBarVisibility="Auto">
                         <StackPanel x:Name="DetailList" Margin="0,0,4,0" />
                     </ScrollViewer>

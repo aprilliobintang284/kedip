@@ -206,10 +206,10 @@ public partial class ControlPanelWindow : GlassPanel
         tile.Label.Text = label;
         tile.Plate.SetResourceReference(Border.BackgroundProperty, on ? "DockAccentBrush" : "PanelCard");
         tile.Plate.SetResourceReference(Border.BorderBrushProperty, on ? "DockAccentBrush" : "PanelCardEdge");
-        string foreground = on ? "DockOnAccentBrush" : "TextPrimaryBrush";
+        string foreground = on ? "DockOnAccentBrush" : "DockTextBrush";
         tile.Main.SetResourceReference(ForegroundProperty, foreground);
         tile.More?.SetResourceReference(ForegroundProperty, foreground);
-        tile.Split?.SetValue(Shape.FillProperty, on ? new SolidColorBrush(Color.FromArgb(0x33, 0, 0, 0)) : new SolidColorBrush(Color.FromArgb(0x24, 0xFF, 0xFF, 0xFF)));
+        tile.Split?.SetValue(Shape.FillProperty, on ? new SolidColorBrush(Color.FromArgb(0x33, 0, 0, 0)) : DockPalette.Tint(0x24));
     }
 
     private ContextMenu SettingsMenu(string page, string text)
@@ -451,7 +451,7 @@ public partial class ControlPanelWindow : GlassPanel
             {
                 Text = subtitle,
                 FontSize = 11.5,
-                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                Foreground = (Brush)FindResource("DockText2Brush"),
                 TextTrimming = TextTrimming.CharacterEllipsis,
             });
         }
@@ -468,7 +468,7 @@ public partial class ControlPanelWindow : GlassPanel
             return button;
         }
 
-        var box = new StackPanel { Background = new SolidColorBrush(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF)) };
+        var box = new StackPanel { Background = DockPalette.Tint(0x10) };
         box.Children.Add(button);
         if (expanded is FrameworkElement fe)
         {

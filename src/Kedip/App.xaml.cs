@@ -56,6 +56,16 @@ public partial class App : Application
         };
 
         var settings = SettingsStore.Load();
+        Kedip.DockBar.DockPalette.Init(settings.Current.Look);
+        DockLook shownLook = settings.Current.Look;
+        settings.Changed += (_, _) =>
+        {
+            if (settings.Current.Look != shownLook)
+            {
+                shownLook = settings.Current.Look;
+                Kedip.DockBar.DockPalette.Set(shownLook, animate: settings.Current.Animations);
+            }
+        };
         var peeks = new PeekBus();
         var foreground = new ForegroundWatcher();
         var idle = new IdleWatcher();

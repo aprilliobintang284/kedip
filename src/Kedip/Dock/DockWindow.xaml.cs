@@ -25,7 +25,6 @@ public partial class DockWindow : Window
     private const double HandleHeight = 5;
     private static readonly TimeSpan SlideTime = TimeSpan.FromMilliseconds(240);
     private static readonly IEasingFunction SlideEase = Frozen(new CubicEase { EasingMode = EasingMode.EaseOut });
-    private static readonly Brush DimDot = Frozen(new SolidColorBrush(Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)));
 
     private readonly AppServices _services;
     private readonly DockApps _apps = new();
@@ -512,7 +511,7 @@ public partial class DockWindow : Window
             Height = 3.5,
             Width = app.IsActive ? 14 : 4,
             CornerRadius = new CornerRadius(1.75),
-            Background = app.IsActive ? Brushes.White : DimDot,
+            Background = app.IsActive ? (Brush)FindResource("DockTextBrush") : DockPalette.Tint(0x99),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Bottom,
             Margin = new Thickness(0, 0, 0, 2.5),
@@ -832,6 +831,7 @@ public partial class DockWindow : Window
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
+        DockAccent.Apply(Resources);
         ApplyTaskbarMode();
         ApplyWidgetVisibility();
         UpdateDnd();

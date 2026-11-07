@@ -8,24 +8,27 @@ namespace Kedip.DockBar;
 internal static class DockAccent
 {
     private static readonly Color Fallback = Color.FromRgb(0x4C, 0xC2, 0xFF);
+    private static readonly Color LightFallback = Color.FromRgb(0x00, 0x67, 0xC0);
 
     public static void Apply(ResourceDictionary resources)
     {
-        var color = Read();
+        bool light = DockPalette.IsLight;
+        var color = Read(light);
         resources["DockAccentBrush"] = Brush(color, 0xFF);
         resources["DockAccentHoverBrush"] = Brush(color, 0xE0);
+        resources["DockOnAccentBrush"] = Brush(light ? Colors.White : Colors.Black, light ? (byte)0xFF : (byte)0xE6);
     }
 
-    private static Color Read()
+    private static Color Read(bool light)
     {
         try
         {
-            var c = new UISettings().GetColorValue(UIColorType.AccentLight2);
+            var c = new UISettings().GetColorValue(light ? UIColorType.AccentDark1 : UIColorType.AccentLight2);
             return Color.FromRgb(c.R, c.G, c.B);
         }
         catch (Exception)
         {
-            return Fallback;
+            return light ? LightFallback : Fallback;
         }
     }
 

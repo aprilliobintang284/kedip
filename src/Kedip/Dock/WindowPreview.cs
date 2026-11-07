@@ -42,14 +42,14 @@ internal sealed class WindowPreview : Window
         UseLayoutRounding = true;
         Title = "Pratinjau jendela";
         FontFamily = (FontFamily)Application.Current.FindResource("UiFont");
-        Foreground = (Brush)Application.Current.FindResource("TextPrimaryBrush");
+        Foreground = (Brush)Application.Current.FindResource("DockTextBrush");
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Kedip;component/Dock/DockTheme.xaml", UriKind.Relative) });
         DockAccent.Apply(Resources);
         Content = new Border
         {
-            Background = (Brush)Resources["PanelSurface"],
-            BorderBrush = (Brush)Resources["DockEdge"],
+            Background = (Brush)Application.Current.FindResource("PanelSurface"),
+            BorderBrush = (Brush)Application.Current.FindResource("DockEdge"),
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(Radius),
             Child = _cards,
@@ -163,7 +163,7 @@ internal sealed class WindowPreview : Window
             Width = ThumbWidth,
             Height = ThumbHeight,
             CornerRadius = new CornerRadius(8),
-            Background = new SolidColorBrush(Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF)),
+            Background = DockPalette.Tint(0x0D),
             Child = app.Icon is { } big ? new Image { Source = big, Width = 40, Height = 40, Opacity = 0.7 } : null,
         };
         var body = new StackPanel();
@@ -182,7 +182,7 @@ internal sealed class WindowPreview : Window
         AutomationProperties.SetName(card, title.Text);
         card.MouseEnter += (_, _) =>
         {
-            card.Background = (Brush)Resources["DockHover"];
+            card.Background = (Brush)Application.Current.FindResource("DockHover");
             close.Visibility = Visibility.Visible;
         };
         card.MouseLeave += (_, _) =>

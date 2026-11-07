@@ -13,7 +13,7 @@
                     <WrapPanel x:Name="AppGrid" />
                 </ScrollViewer>
                 <TextBlock x:Name="EmptyText" Text="Nggak ada app yang cocok." Visibility="Collapsed" HorizontalAlignment="Center"
-                           VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
+                           VerticalAlignment="Center" Foreground="{StaticResource DockText2Brush}" />
             </Grid>
             <Border Height="1" Margin="0,8,0,8" Background="{StaticResource DockLine}" />
             <Grid>

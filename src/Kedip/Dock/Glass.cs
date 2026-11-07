@@ -43,17 +43,18 @@ internal static class Glass
     }
 
     /// <summary>
-    /// Cuts the window (blur included) to rounded rectangles given in device pixels. The cut is a little squarer than
-    /// the shape WPF draws, so the visible edge is WPF's smooth one and the hard region edge only meets plain blur.
+    /// Cuts the window (blur included) to rounded rectangles given in device pixels. The cut is exactly the rectangle
+    /// (no spill of blur past the edge) with corners a hair rounder than the shape WPF draws, so the hard, unsmoothed
+    /// region edge always lies under WPF's smooth edge stroke and no ghost of blur shows around the curve.
     /// </summary>
     public static void Shape(IntPtr hwnd, IReadOnlyList<Rect> rects, double radius)
     {
         IntPtr combined = CreateRectRgn(0, 0, 0, 0);
-        int diameter = Math.Max(0, (int)Math.Round((radius - 1.5) * 2));
+        int diameter = Math.Max(0, (int)Math.Round((radius + 1.0) * 2));
         foreach (var r in rects)
         {
-            IntPtr part = CreateRoundRectRgn((int)Math.Floor(r.Left), (int)Math.Floor(r.Top), (int)Math.Ceiling(r.Right) + 1,
-                (int)Math.Ceiling(r.Bottom) + 1, diameter, diameter);
+            IntPtr part = CreateRoundRectRgn((int)Math.Round(r.Left), (int)Math.Round(r.Top), (int)Math.Round(r.Right) + 1,
+                (int)Math.Round(r.Bottom) + 1, diameter, diameter);
             CombineRgn(combined, combined, part, RGN_OR);
             DeleteObject(part);
         }

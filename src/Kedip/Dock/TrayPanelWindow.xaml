@@ -7,7 +7,7 @@
         <StackPanel Margin="8">
             <WrapPanel x:Name="Icons" MaxWidth="220" HorizontalAlignment="Left" />
             <TextBlock x:Name="EmptyText" Text="Belum ada ikon tray" Margin="10,8" FontSize="12.5"
-                       Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed" />
+                       Foreground="{StaticResource DockText2Brush}" Visibility="Collapsed" />
             <StackPanel x:Name="TaskbarRow" Visibility="Collapsed">
                 <Border Height="1" Margin="4,6" Background="{StaticResource DockLine}" />
                 <Button x:Name="TaskbarToggle" Style="{StaticResource PanelLink}" />

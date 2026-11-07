@@ -186,6 +186,16 @@ public partial class SettingsWindow : Window
             }
         };
 
+        _loaders.Add(s => LookSegments.SelectedIndex = (int)s.Look);
+        LookSegments.SelectionChanged += (_, _) =>
+        {
+            if (LookSegments.SelectedIndex >= 0)
+            {
+                var look = (DockLook)LookSegments.SelectedIndex;
+                Apply(s => s.Look = look);
+            }
+        };
+
         _loaders.Add(s => DockHideSegments.SelectedIndex = s.DockAutoHide == DockHide.Never ? 1 : 0);
         DockHideSegments.SelectionChanged += (_, _) =>
         {

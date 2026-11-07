@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Kedip.Core;
 using Kedip.Notifications;
@@ -53,7 +54,7 @@ public partial class ClockPanelWindow : GlassPanel
                 Text = day,
                 FontSize = 11.5,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                Foreground = (Brush)FindResource("DockText2Brush"),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 4, 0, 4),
             });
@@ -169,9 +170,11 @@ public partial class ClockPanelWindow : GlassPanel
         return new Border
         {
             Child = card,
+            RenderTransform = new TranslateTransform(),
+            Tag = items,
             CornerRadius = new CornerRadius(16),
-            Background = new SolidColorBrush(Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF)),
-            BorderBrush = new SolidColorBrush(Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF)),
+            Background = DockPalette.Tint(0x10),
+            BorderBrush = DockPalette.Tint(0x0D),
             BorderThickness = new Thickness(1),
             Padding = new Thickness(12, 10, 8, 12),
             Margin = new Thickness(0, 0, 0, 8),
@@ -188,7 +191,7 @@ public partial class ClockPanelWindow : GlassPanel
         {
             Text = When(item.Time),
             FontSize = 11,
-            Foreground = (Brush)FindResource("TextSecondaryBrush"),
+            Foreground = (Brush)FindResource("DockText2Brush"),
             Margin = new Thickness(8, 1, 0, 0),
         };
         DockPanel.SetDock(time, Dock.Right);
@@ -212,7 +215,7 @@ public partial class ClockPanelWindow : GlassPanel
                 TextWrapping = TextWrapping.Wrap,
                 MaxHeight = 48,
                 TextTrimming = TextTrimming.CharacterEllipsis,
-                Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                Foreground = (Brush)FindResource("DockText2Brush"),
                 Margin = new Thickness(0, 2, 0, 0),
             });
         }
@@ -260,8 +263,9 @@ public partial class ClockPanelWindow : GlassPanel
     }
 
     /// <summary>Hides them from Kedip's list (Windows' own notification centre is left as it is).</summary>
-    private void Dismiss(List<NotificationItem> items)
+    private async void Dismiss(List<NotificationItem> items)
     {
+        var card = NotificationList.Children.OfType<Border>().FirstOrDefault(b => b.Tag is List<NotificationItem> l && ReferenceEquals(l, items));
         _services.Settings.Update(s =>
         {
             s.NotificationsDismissed.AddRange(items.Select(i => i.Key));
@@ -271,18 +275,102 @@ public partial class ClockPanelWindow : GlassPanel
             }
         });
         _notifications.RemoveAll(n => items.Contains(n));
+        if (card is not null && Animations)
+        {
+            await Collapse(card);
+        }
+
         ShowNotifications();
     }
 
-    private void ClearAll()
+    private bool _clearing;
+
+    private async void ClearAll()
     {
+        if (_clearing)
+        {
+            return;
+        }
+
+        _clearing = true;
+        ClearButton.IsEnabled = false;
         _services.Settings.Update(s =>
         {
             s.NotificationsClearedBefore = DateTime.UtcNow.ToFileTimeUtc();
             s.NotificationsDismissed.Clear();
         });
         _notifications.Clear();
+        if (Animations && NotificationList.Children.Count > 0)
+        {
+            // Cards slide off to the right one after another, then the list folds shut and the empty state fades in.
+            var cards = NotificationList.Children.OfType<Border>().ToList();
+            var slides = new List<Task>();
+            for (int i = 0; i < cards.Count; i++)
+            {
+                var card = cards[i];
+                var begin = TimeSpan.FromMilliseconds(Math.Min(i, 5) * 50);
+                var slide = new DoubleAnimation(0, 44, TimeSpan.FromMilliseconds(240)) { BeginTime = begin, EasingFunction = Accelerate };
+                var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(220)) { BeginTime = begin, EasingFunction = Accelerate };
+                slides.Add(Run(card.RenderTransform, TranslateTransform.XProperty, slide));
+                card.BeginAnimation(OpacityProperty, fade);
+            }
+
+            await Task.WhenAll(slides);
+            double height = NotificationScroll.ActualHeight;
+            NotificationScroll.Height = height;
+            await Run(NotificationScroll, HeightProperty, new DoubleAnimation(height, 0, TimeSpan.FromMilliseconds(260)) { EasingFunction = Smooth });
+            NotificationScroll.BeginAnimation(HeightProperty, null);
+            NotificationScroll.ClearValue(HeightProperty);
+        }
+
         ShowNotifications();
+        if (Animations)
+        {
+            EmptyNotifications.Opacity = 0;
+            EmptyNotifications.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(280)) { EasingFunction = Smooth });
+            if (EmptyNotifications.RenderTransform is not TranslateTransform)
+            {
+                EmptyNotifications.RenderTransform = new TranslateTransform();
+            }
+
+            EmptyNotifications.RenderTransform.BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(320)) { EasingFunction = Smooth });
+        }
+
+        _clearing = false;
+    }
+
+    private bool Animations => _services.Settings.Current.Animations;
+
+    private static readonly IEasingFunction Smooth = new CubicEase { EasingMode = EasingMode.EaseOut };
+    private static readonly IEasingFunction Accelerate = new CubicEase { EasingMode = EasingMode.EaseIn };
+
+    /// <summary>Fades a card out and folds its height (and gap) to nothing.</summary>
+    private static async Task Collapse(Border card)
+    {
+        double height = card.ActualHeight;
+        card.Height = height;
+        card.BeginAnimation(OpacityProperty, new DoubleAnimation(0, TimeSpan.FromMilliseconds(150)));
+        card.RenderTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(0, 30, TimeSpan.FromMilliseconds(180)) { EasingFunction = Accelerate });
+        await Task.Delay(120);
+        card.BeginAnimation(MarginProperty, new ThicknessAnimation(card.Margin, new Thickness(0), TimeSpan.FromMilliseconds(200)) { EasingFunction = Smooth });
+        await Run(card, HeightProperty, new DoubleAnimation(height, 0, TimeSpan.FromMilliseconds(200)) { EasingFunction = Smooth });
+    }
+
+    private static Task Run(Animatable target, DependencyProperty property, AnimationTimeline animation)
+    {
+        var done = new TaskCompletionSource();
+        animation.Completed += (_, _) => done.TrySetResult();
+        target.BeginAnimation(property, animation);
+        return done.Task;
+    }
+
+    private static Task Run(UIElement target, DependencyProperty property, AnimationTimeline animation)
+    {
+        var done = new TaskCompletionSource();
+        animation.Completed += (_, _) => done.TrySetResult();
+        target.BeginAnimation(property, animation);
+        return done.Task;
     }
 
     /// <summary>
@@ -318,7 +406,7 @@ public partial class ClockPanelWindow : GlassPanel
             DndButton.Content = bell;
         }
 
-        DndButton.SetResourceReference(ForegroundProperty, on ? "DockAccentBrush" : "TextPrimaryBrush");
+        DndButton.SetResourceReference(ForegroundProperty, on ? "DockAccentBrush" : "DockTextBrush");
         DndButton.ToolTip = on
             ? "Do not disturb nyala: notifikasi masuk tanpa banner dan suara (klik untuk mematikan)"
             : "Do not disturb: bisukan notifikasi (tetap masuk ke daftar ini)";
@@ -384,7 +472,7 @@ public partial class ClockPanelWindow : GlassPanel
             VerticalAlignment = VerticalAlignment.Center,
             Opacity = day.Month == _month.Month ? 1 : 0.32,
         };
-        number.SetResourceReference(TextBlock.ForegroundProperty, today ? "DockOnAccentBrush" : "TextPrimaryBrush");
+        number.SetResourceReference(TextBlock.ForegroundProperty, today ? "DockOnAccentBrush" : "DockTextBrush");
         if (!today && day.DayOfWeek == DayOfWeek.Sunday)
         {
             number.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x8A, 0x80)); // Sundays in red, as on Indonesian calendars
